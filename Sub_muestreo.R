@@ -20,19 +20,6 @@ consulta_spac <- extract(vector_1, mundo)
 nombre_0 <- consulta_spac$NAME_0
 
 
-#bBUSCANDO DISCREPANCIAS 
-
-i <- which(is.na(nombre_0))
-i
-## integer(0)
-j <- which(nombre_0 != vector_1$country)
-# for the mismatches, bind the country names of the polygons and points
-m <- cbind(nombre_0[j], vector_1$country[j])
-colnames(m) <- c("polygons", "acaule")
-m
-##      polygons acaule
-
-
 #CON TIDYVERSE
 # Crear un dataframe de comparación
 comparacion <- tibble(
