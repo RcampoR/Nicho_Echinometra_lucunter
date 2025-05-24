@@ -4,18 +4,8 @@ rm(list = ls())
 
 file.choose()
 
-
-Batimetria <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\batimetria.nc")
-
+#BIO-ORACLE
 Clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\clorofila.nc")
-
-Salinidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\salinidad_media.nc")
-
-Temp_max <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_max.nc")
-
-Temp_med <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_media.nc")
-
-Temp_min <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_minima.nc")
 
 Velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\velocidad_corriente.nc")
 
@@ -81,69 +71,99 @@ marspec_Biogeo_17 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_
 plot(Batimetria)
 plot(marspec_batimetria)
 
-res(marspec_batimetria)
-
-
-¡Perfecto! Vamos a continuar el código incorporando todas las variables de MARSPEC hasta biogeo17 que mencionaste, además de Clorofila y Velocidad_corriente.
-
-Primero, necesitamos asumir que ya tienes cargadas todas las variables individuales de MARSPEC. Basado en la tabla que mostraste en la imagen, las variables de biogeo01 a biogeo17 (incluyendo batymetry que sería marspec_batimetria), SSS y SST.
-
-Asunciones (cargue estos archivos si aún no lo ha hecho):
-  R
-
-library(terra)
-library(dplyr)
-library(caret) # Para findCorrelation
-library(corrplot) # Para visualizar la matriz de correlación
-
-# Supongamos que ya tienes cargadas tus variables de BIO-ORACLE:
-# Clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\clorofila.nc")
-# Velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\velocidad_corriente.nc")
-
-# Y que tienes cargadas tus variables de MARSPEC (basado en la imagen de la tabla):
-# marspec_batimetria <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_batimetria.tif") # La de 0.008333333 grados
-# marspec_Biogeo_1 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo01.tif")
-# marspec_Biogeo_2 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo02.tif")
-# marspec_Biogeo_3 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo03.tif")
-# marspec_Biogeo_4 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo04.tif")
-# marspec_Biogeo_5 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo05.tif")
-# marspec_Biogeo_6 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo06.tif")
-# marspec_Biogeo_7 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo07.tif")
-# marspec_Biogeo_8 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo08.tif") # SSS Mean Annual
-# marspec_Biogeo_9 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo09.tif") # SSS Min Monthly
-# marspec_Biogeo_10 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo10.tif") # SSS Max Monthly
-# marspec_Biogeo_11 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo11.tif") # SSS Annual Range
-# marspec_Biogeo_12 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo12.tif") # SSS Annual Variance
-# marspec_Biogeo_13 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo13.tif") # SST Mean Annual
-# marspec_Biogeo_14 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo14.tif") # SST Coldest month
-# marspec_Biogeo_15 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo15.tif") # SST Warmest month
-# marspec_Biogeo_16 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo16.tif") # SST Annual Range
-# marspec_Biogeo_17 <- rast("C:\\ruta\\a\\tus\\archivos\\marspec_biogeo17.tif") # SST Annual Variance
-
-Código Continuado:
-  R
-
-# 1. Apilar todas las variables seleccionadas inicialmente
-variables_raster <- c(marspec_batimetria,
-                      Clorofila,
-                      Velocidad_corriente,
-                      marspec_Biogeo_1,
-                      marspec_Biogeo_2,
-                      marspec_Biogeo_3,
-                      marspec_Biogeo_4,
-                      marspec_Biogeo_5,  
-                      marspec_Biogeo_6,
-                      marspec_Biogeo_7,
-                      marspec_Biogeo_8,  
-                      marspec_Biogeo_9, 
-                      marspec_Biogeo_10, 
-                      marspec_Biogeo_11, 
-                      marspec_Biogeo_12, 
-                      marspec_Biogeo_13, 
-                      marspec_Biogeo_14, 
-                      marspec_Biogeo_15, 
-                      marspec_Biogeo_16, 
-                      marspec_Biogeo_17) 
-
 crs(Clorofila) <- "EPSG:4326"
 crs(Velocidad_corriente) <- "EPSG:4326"
+
+
+
+# Definir el raster de referencia
+referencia_raster <- marspec_batimetria
+
+# 2. Crear una lista de todos los rasters que deseas incluir
+lista_de_rasters_originales <- list(
+  marspec_batimetria = marspec_batimetria, # Damos nombres para el debugging
+  Clorofila = Clorofila,
+  Velocidad_corriente = Velocidad_corriente,
+  marspec_Biogeo_1 = marspec_Biogeo_1,
+  marspec_Biogeo_2 = marspec_Biogeo_2,
+  marspec_Biogeo_3 = marspec_Biogeo_3,
+  marspec_Biogeo_4 = marspec_Biogeo_4,
+  marspec_Biogeo_5 = marspec_Biogeo_5,
+  marspec_Biogeo_6 = marspec_Biogeo_6,
+  marspec_Biogeo_7 = marspec_Biogeo_7,
+  marspec_Biogeo_8 = marspec_Biogeo_8,
+  marspec_Biogeo_9 = marspec_Biogeo_9,
+  marspec_Biogeo_10 = marspec_Biogeo_10,
+  marspec_Biogeo_11 = marspec_Biogeo_11,
+  marspec_Biogeo_12 = marspec_Biogeo_12,
+  marspec_Biogeo_13 = marspec_Biogeo_13,
+  marspec_Biogeo_14 = marspec_Biogeo_14,
+  marspec_Biogeo_15 = marspec_Biogeo_15,
+  marspec_Biogeo_16 = marspec_Biogeo_16,
+  marspec_Biogeo_17 = marspec_Biogeo_17
+)
+
+# 3. Nombres para las capas finales (para el stack final)
+nombres_capas <- c("batimetria_marspec", "clorofila", "velocidad_corriente",
+                   "biogeo01_EW_aspect", "biogeo02_NS_aspect", "biogeo03_plan_curvature", "biogeo04_profile_curvature",
+                   "biogeo05_dist_to_shore", "biogeo06_bath_slope", "biogeo07_concavity",
+                   "biogeo08_sss_mean", "biogeo09_sss_min", "biogeo10_sss_max",
+                   "biogeo11_sss_range", "biogeo12_sss_variance",
+                   "biogeo13_sst_mean", "biogeo14_sst_coldest", "biogeo15_sst_warmest",
+                   "biogeo16_sst_range", "biogeo17_sst_variance")
+
+# 4. Lista para almacenar los rasters ya alineados
+aligned_rasters_list <- list()
+
+# 5. Iterar sobre la lista de rasters originales, alineándolos individualmente
+for (name in names(lista_de_rasters_originales)) {
+  current_layer <- lista_de_rasters_originales[[name]]
+  
+  message(paste("Procesando capa:", name))
+  
+  # Paso A: Asegurarse de que el CRS sea el mismo que el de referencia
+  if (crs(current_layer) != crs(referencia_raster)) {
+    message(paste("  Reproyectando", name, "de", crs(current_layer), "a", crs(referencia_raster)))
+    current_layer <- project(current_layer, crs(referencia_raster))
+  }
+  
+  # Paso B: Re-muestrear para que coincida con la resolución y extensión de la referencia
+  # Este es el paso que corrige "number of rows and/or columns do not match" al final
+  message(paste("  Re-muestreando", name, "a la rejilla de referencia..."))
+  aligned_layer <- resample(current_layer, referencia_raster, method = "bilinear")
+  
+  # Asignar el nombre original para mantener la trazabilidad
+  names(aligned_layer) <- name # Esto es temporal, se renombrará al final
+  
+  # Añadir la capa alineada a la lista
+  aligned_rasters_list[[name]] <- aligned_layer
+}
+
+# 6. Apilar todos los rasters YA ALINEADOS en un solo SpatRaster
+# Esto debería funcionar sin el error "number of rows and/or columns do not match"
+# porque todas las capas en aligned_rasters_list ahora tienen la misma rejilla.
+variables_raster_aligned <- rast(aligned_rasters_list)
+
+# 7. Asignar los nombres finales y limpios al stack
+names(variables_raster_aligned) <- nombres_capas
+
+cat("\nStack de variables creado exitosamente. Propiedades del stack final:\n")
+print(variables_raster_aligned)
+
+plot(Clorofila)
+plot(variables_raster_aligned$clorofila)
+
+plot(variables_raster_aligned$velocidad_corriente)
+plot(Velocidad_corriente)
+
+plot(marspec_Biogeo_15)
+plot(variables_raster_aligned$biogeo15_sst_warmest)
+
+plot(marspec_Biogeo_7)
+plot(variables_raster_aligned$biogeo07_concavity)
+
+plot(marspec_Biogeo_3)
+plot(variables_raster_aligned$biogeo03_plan_curvature)
+
+ext(marspec_Biogeo_12)
+ext(marspec_Biogeo_14)
