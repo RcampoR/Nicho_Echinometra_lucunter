@@ -5,22 +5,36 @@ rm(list = ls())
 file.choose()
 
 
-Batimetria <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\batimetria.nc")
+#VARIABLES BIO-ORACLE
+Clorofila_media <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\clorofila.nc")
 
-Clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\clorofila.nc")
+#salinidad
+Salinidad_media <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\salinidad_media.nc")
 
-Salinidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\salinidad_media.nc")
+Salinidad_range <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\salinidad_rango.nc")
 
-Temp_max <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_max.nc")
+#temperatura
+Temp_media <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_media.nc")
 
-Temp_med <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_media.nc")
+Temp_rango <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_rango.nc")
 
-Temp_min <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_minima.nc")
+#corriente
+Velocidad_corriente_media <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\velocidad_corriente_media.nc")
 
-Velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\velocidad_corriente.nc")
+Direccion_corriente_media <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\direccion_corriente_media.nc")
 
+#oxigeno disuelto
+Oxigeno_disuelto_medio <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\oxigeno_disuelto_medio.nc")
 
+#pH
+pH_medio <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\pH_medio.nc")
 
+pH_rango <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\pH_rango.nc")
+
+#Productividad primaria
+Productividad_primaria_media <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\productividad_primaria_media.nc")
+
+#VARIABLES MARSPEC
 # Ruta base con todas las capas en subcarpetas
 
 marspec_batimetria <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\bathymetry_30s\\bathymetry_30s\\bathy_30s\\hdr.adf")
@@ -46,80 +60,171 @@ marspec_Biogeo_6 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_l
 #concavidad
 marspec_Biogeo_7 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo01_07_30s\\biogeo01_07_30s\\biogeo07_30s\\hdr.adf")
 
-#SSS medio anual
-marspec_Biogeo_8 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo08_30s\\hdr.adf")
-
-#SSS mínimo mensual
-marspec_Biogeo_9 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo09_30s\\hdr.adf")
-
-#SSS Máximo Mensual
-marspec_Biogeo_10 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo10_30s\\hdr.adf")
-
-#Alcance anual en SSS
-marspec_Biogeo_11 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo11_30s\\hdr.adf")
-
-#Variancia anual en SSS
-marspec_Biogeo_12 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo12_30s\\hdr.adf")
-
-#SST anual medio
-
-marspec_Biogeo_13 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo13_30s\\hdr.adf")
-
-#SST del mes más frío sin hielo
-marspec_Biogeo_14 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo14_30s\\hdr.adf")
-
-# SST del mes más cálido sin hielo
-marspec_Biogeo_15 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo15_30s\\hdr.adf")
-
-#Coravisión anual en SST
-marspec_Biogeo_16 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo16_30s\\hdr.adf")
-
-#Variancia anual en SST
-marspec_Biogeo_17 <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo08_17_30s\\biogeo08_17_30s\\biogeo17_30s\\hdr.adf")
 
 
-#CRS bio-oracle
-crs(Clorofila) <- "EPSG:4326"
+# VERIFICAR DATOS DE ALGUNAS VARIABLES
+print(marspec_batimetria)
 
-crs(Velocidad_corriente) <- "EPSG:4326"
+print(Temp_media)
+
+#ASIGNAR CRS A BIO-ORACLE
+
+Var_Bio_oracle <- c(Clorofila_media,
+                    Salinidad_media,                
+                    Salinidad_range,                 
+                    Temp_media,                     
+                    Temp_rango,                      
+                    Velocidad_corriente_media,
+                    Direccion_corriente_media,
+                    pH_medio,                        
+                    pH_rango,                      
+                    Productividad_primaria_media,
+                    Oxigeno_disuelto_medio)
 
 
-#Tratando el punto flotante
+#cambiar crs de bio-oracle a EPSG:4326
 
-Clorofila[Clorofila < -9999.8 & Clorofila > -10000.0] <- NA
+if(crs(Var_Bio_oracle) == "") {
+  crs(Var_Bio_oracle) <- "EPSG:4326"
+}
 
-Velocidad_corriente[Velocidad_corriente < -9999.8 & Velocidad_corriente > -10000.0] <- NA
+Var_Bio_oracle$thetao_mean
+Var_Bio_oracle
+
+crs(Var_Bio_oracle)
+
+# CAMBIAR NOMBRES A ALGO MÁS SIMPLE
+# Opción 1: Nombres simples
+nombres_simples <- c("clorofila", "salinidad_media", "salinidad_rango", 
+                     "temp_media", "temp_rango",
+                     "velocidad_corriente", "direccion_corriente",
+                     "pH_medio", "pH_rango", 
+                     "productividad_primaria", "oxigeno_disuelto")
+
+names(Var_Bio_oracle) <- nombres_simples
+
+Var_Bio_oracle$clorofila
+
+# Método robusto para tratar valores de punto flotante como NA
+# Usando rangos específicos para capturar imprecisiones de punto flotante
+
+# Clorofila
+Var_Bio_oracle$clorofila[Var_Bio_oracle$clorofila < -9999.8 & 
+                           Var_Bio_oracle$clorofila > -10000.2] <- NA
+
+# Salinidad
+Var_Bio_oracle$salinidad_media[Var_Bio_oracle$salinidad_media < -9999.8 & 
+                                 Var_Bio_oracle$salinidad_media > -10000.2] <- NA
+
+Var_Bio_oracle$salinidad_rango[Var_Bio_oracle$salinidad_rango < -9999.8 & 
+                                 Var_Bio_oracle$salinidad_rango > -10000.2] <- NA
+
+# Temperatura  
+Var_Bio_oracle$temp_media[Var_Bio_oracle$temp_media < -9999.8 & 
+                            Var_Bio_oracle$temp_media > -10000.2] <- NA
+
+Var_Bio_oracle$temp_rango[Var_Bio_oracle$temp_rango < -9999.8 & 
+                            Var_Bio_oracle$temp_rango > -10000.2] <- NA
+
+# Corrientes
+Var_Bio_oracle$velocidad_corriente[Var_Bio_oracle$velocidad_corriente < -9999.8 & 
+                                     Var_Bio_oracle$velocidad_corriente > -10000.2] <- NA
+
+Var_Bio_oracle$direccion_corriente[Var_Bio_oracle$direccion_corriente < -9999.8 & 
+                                     Var_Bio_oracle$direccion_corriente > -10000.2] <- NA
+
+# pH
+Var_Bio_oracle$pH_medio[Var_Bio_oracle$pH_medio < -9999.8 & 
+                          Var_Bio_oracle$pH_medio > -10000.2] <- NA
+
+Var_Bio_oracle$pH_rango[Var_Bio_oracle$pH_rango < -9999.8 & 
+                          Var_Bio_oracle$pH_rango > -10000.2] <- NA
+
+# Productividad y oxígeno
+Var_Bio_oracle$productividad_primaria[Var_Bio_oracle$productividad_primaria < -9999.8 & 
+                                        Var_Bio_oracle$productividad_primaria > -10000.2] <- NA
+
+Var_Bio_oracle$oxigeno_disuelto[Var_Bio_oracle$oxigeno_disuelto < -9999.8 & 
+                                  Var_Bio_oracle$oxigeno_disuelto > -10000.2] <- NA
 
 
 #Remuestreo de capas BIO-ORACLE
 
-Clorofila_remues <- resample(Clorofila, marspec_batimetria, method = "bilinear")
+# revisar extencion de las capas
+ext(Var_Bio_oracle)
+ext(marspec_batimetria)
 
-V_corriente_remues <- resample(Velocidad_corriente, marspec_batimetria, method = "bilinear")
+# solucionar con remuestreo bilinear para variables continuas
+
+if(ext(Var_Bio_oracle) != ext(marspec_batimetria)) {
+  Var_Bio_oracle_remues <- resample(Var_Bio_oracle, marspec_batimetria, method = "bilinear")
+  print("Remuestreo completado para todas las capas BIO-ORACLE")
+}
 
 
-# Concatenar todas las capas raster en un solo objeto
-variables_raster <- c(
-  Clorofila_remues,
-  V_corriente_remues,
+Var_Bio_oracle_remues
+Var_Bio_oracle_remues$direccion_corriente
+
+
+# verificando que todo este bien
+
+plot(Temp_media)
+plot(Var_Bio_oracle$temp_media)
+plot(Var_Bio_oracle_remues$temp_media)
+
+ext(Temp_media)
+ext(Var_Bio_oracle$temp_media)
+ext(Var_Bio_oracle_remues$temp_media)
+
+
+
+variables_raster <- list(
+  # Variables de Bio-ORACLE
+  Var_Bio_oracle_remues$clorofila,                 
+  Var_Bio_oracle_remues$salinidad_media,                
+  Var_Bio_oracle_remues$salinidad_rango,                 
+  Var_Bio_oracle_remues$temp_media,                     
+  Var_Bio_oracle_remues$temp_rango,                      
+  Var_Bio_oracle_remues$velocidad_corriente,
+  Var_Bio_oracle_remues$direccion_corriente,
+  Var_Bio_oracle_remues$pH_medio,                        
+  Var_Bio_oracle_remues$pH_rango,                      
+  Var_Bio_oracle_remues$productividad_primaria,
+  Var_Bio_oracle_remues$oxigeno_disuelto,
+  
+  # Variables de MARSPEC (geofísicas/estructurales)
   marspec_batimetria,
-  marspec_Biogeo_1,
-  marspec_Biogeo_2,
-  marspec_Biogeo_3,
-  marspec_Biogeo_4,
-  marspec_Biogeo_5,
-  marspec_Biogeo_6,
-  marspec_Biogeo_7,
-  marspec_Biogeo_8,
-  marspec_Biogeo_9,
-  marspec_Biogeo_10,
-  marspec_Biogeo_11,
-  marspec_Biogeo_12,
-  marspec_Biogeo_13,
-  marspec_Biogeo_14,
-  marspec_Biogeo_15,
-  marspec_Biogeo_16,
-  marspec_Biogeo_17
+  marspec_Biogeo_1, # Aspecto Este/Oeste
+  marspec_Biogeo_2, # Aspecto Norte/Sur
+  marspec_Biogeo_3, # Curvatura del plan
+  marspec_Biogeo_4, # Perfil Curvatura
+  marspec_Biogeo_5, # Distancia a la costa
+  marspec_Biogeo_6, # Slope batimétrica
+  marspec_Biogeo_7  # Concavidad
+
 )
+
+nombres_capas <- list(
+  "clorofila", "salinidad_media", "salinidad_rango", "temp_media", "temp_rango",
+  "velocidad_corriente", "direccion_corriente", "pH_medio", "pH_rango",
+  "productividad_primaria", "oxigeno_disuelto", "batimetria", "aspecto_EO",
+  "aspecto_NS", "curvatura_plana", "curvatura_perfil", "distancia_costa",
+  "pendiente_batimetrica", "concavidad"
+)
+
+#GUARDAR CAPAS YA PROCESADAS
+
+# Crear carpeta donde guardar los archivos
+dir.create("raster_BIO_MARS_remuestreados", showWarnings = FALSE)
+
+# Guardar cada raster
+for (i in seq_along(variables_raster)) {
+  writeRaster(
+    variables_raster[[i]],
+    filename = file.path("raster_BIO_MARS_remuestreados", paste0(nombres_capas[[i]], ".tif")),
+    overwrite = TRUE
+  )
+}
+
 
 
