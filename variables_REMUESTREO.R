@@ -178,7 +178,7 @@ ext(Var_Bio_oracle_remues$temp_media)
 
 
 
-variables_raster <- list(
+variables_raster <- c(
   # Variables de Bio-ORACLE
   Var_Bio_oracle_remues$clorofila,                 
   Var_Bio_oracle_remues$salinidad_media,                
@@ -204,7 +204,9 @@ variables_raster <- list(
 
 )
 
-nombres_capas <- list(
+
+# cambiar nombres
+nombres_capas <- c(
   "clorofila", "salinidad_media", "salinidad_rango", "temp_media", "temp_rango",
   "velocidad_corriente", "direccion_corriente", "pH_medio", "pH_rango",
   "productividad_primaria", "oxigeno_disuelto", "batimetria", "aspecto_EO",
@@ -212,19 +214,40 @@ nombres_capas <- list(
   "pendiente_batimetrica", "concavidad"
 )
 
-#GUARDAR CAPAS YA PROCESADAS
+names(variables_raster) <- nombres_capas
+
+
+
+#RECORTAR CAPAS A TAMAÑO DE COLOMBIA
+
+#cargar .shp de colombia
+
+colombia_vector <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\gadm36_COL_1.shp")
+plot(colombia_vector)
+
+
+# cortar rasters con base al vector de colombia
+
+variables_COL <- crop(variables_raster, ext(colombia_vector))
+
+plot(variables_COL$temp_media)
+
+
+#volver una lista, para iterar
+variables_COL <- as.list(variables_COL)
+nombres_capas <- as.list(nombres_capas)
+
+#GUARDAR CAPAS YA PROCESADAS PARA COLOMBIA
 
 # Crear carpeta donde guardar los archivos
-dir.create("raster_BIO_MARS_remuestreados", showWarnings = FALSE)
+dir.create("BIO_MARS_remuestreados_COL", showWarnings = FALSE)
 
 # Guardar cada raster
-for (i in seq_along(variables_raster)) {
+for (i in seq_along(variables_COL)) {
   writeRaster(
-    variables_raster[[i]],
-    filename = file.path("raster_BIO_MARS_remuestreados", paste0(nombres_capas[[i]], ".tif")),
+    variables_COL[[i]],
+    filename = file.path("BIO_MARS_remuestreados_COL", paste0(nombres_capas[[i]], ".tif")),
     overwrite = TRUE
   )
 }
-
-
 
