@@ -105,7 +105,7 @@ names(Var_Bio_oracle) <- nombres_simples
 
 Var_Bio_oracle$clorofila
 
-# Método robusto para tratar valores de punto flotante como NA
+################ Método robusto para tratar valores de punto flotante como NA ##############
 # Usando rangos específicos para capturar imprecisiones de punto flotante
 
 # Clorofila
@@ -147,7 +147,7 @@ Var_Bio_oracle$productividad_primaria[Var_Bio_oracle$productividad_primaria < -9
 Var_Bio_oracle$oxigeno_disuelto[Var_Bio_oracle$oxigeno_disuelto < -9999.8 & 
                                   Var_Bio_oracle$oxigeno_disuelto > -10000.2] <- NA
 
-
+#######################################################################################
 #Remuestreo de capas BIO-ORACLE
 
 # revisar extencion de las capas
