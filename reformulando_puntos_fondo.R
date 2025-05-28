@@ -1,22 +1,6 @@
 library(terra)
 library(dplyr)
 
-# --- 1. Define el valor de no data para las variables Bio-Oracle ---
-# Es CRUCIAL que esta línea se ejecute.
-NO_DATA_VALUE_BIOORACLE <- -9999.9
-
-# --- 2. Cargar las variables ---
-
-# VARIABLES BIO-ORACLE (usan .nc y _FillValue=-9999.9)
-clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\clorofila.nc")
-salinidad_media <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\salinidad_media.nc")
-temp_media <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\temperatura_media.nc")
-velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\velocidad_corriente_media.nc")
-pH_medio <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Variables_BIOORACLE\\pH_medio.nc")
-
-# VARIABLES MARSPEC (usan .adf y tienen NaN como no data)
-batimetria <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\bathymetry_30s\\bathymetry_30s\\bathy_30s\\hdr.adf")
-distancia_costa <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo01_07_30s\\biogeo01_07_30s\\biogeo05_30s\\hdr.adf")
 
 # --- 3. Asegurar que todas las capas tienen el mismo CRS (EPSG:4326) y simplificar nombres ---
 # Esto es esencial para que `c()` y `stack()` funcionen bien, y para la alineación.
@@ -24,45 +8,21 @@ distancia_costa <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lu
 # Lista de objetos raster que vamos a procesar
 layers_to_process <- list(
   clorofila = clorofila,
-  salinidad_media = salinidad_media,
-  temp_media = temp_media,
+  salinidad = salinidad,
+  temperatura = temperatura,
   velocidad_corriente = velocidad_corriente,
-  pH_medio = pH_medio,
+  pH  = pH,
   batimetria = batimetria,
   distancia_costa = distancia_costa
 )
 
-for (name_obj in names(layers_to_process)) {
-  r <- layers_to_process[[name_obj]]
-  # Asignar CRS si está vacío
-  if (crs(r) == "") {
-    crs(r) <- "EPSG:4326"
-    assign(name_obj, r, envir = .GlobalEnv) # Actualizar el objeto global
-  }
-  # Renombrar capas a nombres simples si tienen varname complejo
-  if (nlyr(r) == 1 && names(r) != name_obj) {
-    names(r) <- name_obj
-    assign(name_obj, r, envir = .GlobalEnv) # Actualizar el objeto global
-  }
-}
 
-# Volver a cargar los objetos en la lista de rasters_list para el diagnóstico y el stack final
-# Asegúrate de usar los nombres de objeto corregidos si los modificaste (e.g., pH_medio vs pH)
-rasters_list <- list(
-  batimetria = batimetria,
-  clorofila = clorofila,
-  distancia_costa = distancia_costa,
-  pH_medio = pH_medio, # Asegúrate que este sea el nombre correcto del objeto
-  salinidad_media = salinidad_media, # Asegúrate que este sea el nombre correcto del objeto
-  temp_media = temp_media, # Asegúrate que este sea el nombre correcto del objeto
-  velocidad_corriente = velocidad_corriente
-)
 
 # --- 4. DIAGNÓSTICO Y LIMPIEZA DE VALORES NO DATA ---
 print("--- Diagnóstico de valores y NAflag en cada raster ---")
 
-for (nombre in names(rasters_list)) {
-  r <- rasters_list[[nombre]]
+for (nombre in names(layers_to_process)) {
+  r <- layers_to_process[[nombre]]
   cat(paste0("\nVariable: ", nombre, "\n"))
   cat(paste0("  Tiene valores: ", hasValues(r), "\n"))
   
@@ -114,7 +74,7 @@ crs_ref <- crs(batimetria) # Asegurarse de usar el CRS de referencia
 aligned_rasters <- list()
 
 # Iterar sobre los nombres de las variables en rasters_list para asegurar que usamos los objetos actualizados
-for (nombre in names(rasters_list)) {
+for (nombre in names(layers_to_process)) {
   r <- get(nombre) # Obtiene el raster del entorno global
   
   # Asegurarse de que el CRS es el mismo antes de remuestrear
@@ -127,11 +87,11 @@ for (nombre in names(rasters_list)) {
   # 'bilinear' para datos continuos. 'near' para datos categóricos (no aplica aquí).
   cat(paste0("\nAlineando y remuestreando ", nombre, " a la referencia (batimetria)...\n"))
   r_aligned <- resample(r, batimetria, method = "bilinear")
-  aligned_rasters[[nombre]] <- r_aligned
+  layers_to_process[[nombre]] <- r_aligned
 }
 
 # Re-crear el stack con las capas alineadas
-stack_ambientales <- rast(aligned_rasters)
+stack_ambientales <- rast(layers_to_process)
 
 print("\n--- Verificación del stack final después de alineación ---")
 print(stack_ambientales)
@@ -144,7 +104,7 @@ print(paste("Celdas con datos en TODAS las variables (para spatSample):", num_ce
 
 # --- 6. Generar puntos de fondo (si es posible) ---
 if (num_celdas_completas > 0) {
-  num_puntos_fondo <- min(10000, floor(num_celdas_completas * 0.95)) # Usa 95% para ser seguro
+  num_puntos_fondo <- min(1000, floor(num_celdas_completas * 0.95)) # Usa 95% para ser seguro
   cat(paste("\nGenerando", num_puntos_fondo, "puntos de fondo...\n"))
   
   set.seed(42)
