@@ -104,7 +104,7 @@ print(paste("Celdas con datos en TODAS las variables (para spatSample):", num_ce
 
 # --- 6. Generar puntos de fondo (si es posible) ---
 if (num_celdas_completas > 0) {
-  num_puntos_fondo <- min(1000, floor(num_celdas_completas * 0.95)) # Usa 95% para ser seguro
+  num_puntos_fondo <- min(830, floor(num_celdas_completas * 0.95)) # Usa 95% para ser seguro
   cat(paste("\nGenerando", num_puntos_fondo, "puntos de fondo...\n"))
   
   set.seed(42)

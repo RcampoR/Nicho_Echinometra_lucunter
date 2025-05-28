@@ -180,7 +180,7 @@ corrplot(matriz_cor,
 
 colnames(correlación_df)
 
-#extraer valores naltamente correlacionados
+#extraer valores altamente correlacionados
 correlación_df %>% 
   rownames_to_column(var = "VARIABLES1") %>% 
 pivot_longer(cols = -VARIABLES1,

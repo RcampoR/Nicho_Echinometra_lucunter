@@ -24,7 +24,7 @@ Base_Original %>%
 
 
 #ENCONTRAR DATO ERRONEO
-Base_Colombia %>% 
+Base_Original %>% 
   filter(decimalLongitude <= -74 & decimalLongitude >= -75.3) %>% 
   filter(decimalLatitude >= 9 & decimalLatitude <= 10) %>% 
   select(decimalLongitude, decimalLatitude)
