@@ -42,12 +42,20 @@ Base_Colombia <- Base_Original %>%
   filter(!longitud == "-74.8112" & !latitud == "9.3829")
 
 
-
 ### revisar fechas
 
 Base_Colombia %>% 
   group_by(eventDate) %>% 
   summarise(n())
+
+
+# Mapa Mundo
+mundo <- world(path=".")
+plot(mundo, xlim=c(-110,60), ylim=c(-80,40), col="light yellow", border="light gray")
+
+# PUNTOS ECHINOMETRA LUCUNTER
+points(Base_Colombia$longitud, Base_Colombia$latitud, col='red', pch=20)
+
 
 ### guardar tabla
 

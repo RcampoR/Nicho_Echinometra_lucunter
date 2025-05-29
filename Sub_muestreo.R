@@ -1,6 +1,6 @@
-
-
-rm(list = ls())
+library(tidyverse)
+library(terra)
+library(geodata)
 
 # cargar Base de datos 
 Base_Colombia <- read_delim("DB_E_lucunter_CO_limpia.csv")
@@ -23,7 +23,7 @@ nombre_0 <- consulta_spac$NAME_0
 #CON TIDYVERSE
 # Crear un dataframe de comparación
 comparacion <- tibble(
-  nombre_poligono = nombre_0,
+  nombre_poligono = vector_1$nombre_0,
   nombre_punto = vector_1$country
 )
 
@@ -55,7 +55,26 @@ raster_1 <- extend(raster_1, ext(raster_1)+0.1)
 
 set.seed(456)
 
-raster_submuestreo <- spatSample(vector_1, size= 1, "random", strata=raster_1)
+vector_submuestreo <- spatSample(vector_1, size= 1, "random", strata=raster_1)
+
+# MAPA SUBMUESTREO
+
+# Mostrar mapa submuestreo
+
+mapa_sub <- as.polygons(raster_1)
+plot(mapa_sub, border='gray')
+points(vector_1)
+
+# PUNTOS DE SUBMUESTREO
+
+points(raster_submuestreo, cex=1, col='red', pch='x')
+
+#GRAFICAR CON LINEAS
+plot(vector_1, col = "red4")
+lines(mundo, col='gray26', lwd=2)
 
 
+#GUARDAR COMO CSV LOS DATOS LIMPIOS
 
+as.data.frame(vector_submuestreo) %>% 
+write_csv(file = "BD_E_lucunter_submuestreado_COL.csv")
