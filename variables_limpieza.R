@@ -19,6 +19,12 @@ pH_medio <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\
 batimetria <- rast( "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\bathymetry_30s\\bathymetry_30s\\bathy_30s\\hdr.adf")
 distancia_costa <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MARSPEC\\biogeo01_07_30s\\biogeo01_07_30s\\biogeo05_30s\\hdr.adf")
 
+# VECTORES COLOMBIA
+
+Mar_caribe_INVEMAR <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\mar_caribe.json") 
+
+
+# Valor NA en bio-oracle
 
 NO_DATA_VALUE_BIOORACLE <- -9999.9
 
@@ -98,152 +104,73 @@ nombres_capas <- c("clorofila",
 
 names(variables_raster) <- nombres_capas
 
+#REPROYECTAR MAR CARIBE EN BASE A LAS VARIABLES
 
-#verificar valores
-print("\n--- Verificación del stack final después de alineación ---")
-print(stack_ambientales)
+Mar_caribe_INVEMAR <- project(Mar_caribe_INVEMAR, crs(variables_raster))
 
-stack_completo_mask <- app(variables_raster, fun = function(x) all(!is.na(x)))
-num_celdas_completas <- as.numeric(global(stack_completo_mask, fun = sum))
+#RECORTAR CAPAS A TAMAÑO DEL CARIBE COLOMBIANO
 
-print(paste("Celdas con datos en TODAS las variables (para spatSample):", num_celdas_completas))
+ # cortar rasters con base al vector del caribe colombiano
+
+variables_caribe_COL <- crop(variables_raster, ext(Mar_caribe_INVEMAR))
+
+plot(variables_caribe_COL$temperatura)
 
 
-#RECORTAR CAPAS A TAMAÑO DE COLOMBIA
+# enmascarar con la capa del mar caribe
 
-#cargar .shp de colombia
+variables_enmascaradas_INVEMAR <- mask(variables_caribe_COL, Mar_caribe_INVEMAR)
 
-colombia_vector <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\gadm36_COL_1.shp")
-plot(colombia_vector)
+# mascara de 70 metros batimetria 
 
-e_colombia <- ext(-85, -65, -5, 15)
 
-# cortar rasters con base al vector de colombia
+# mascara batimetria
 
-variables_COL <- crop(variables_raster, ext(e_colombia))
+batimetria <- classify(variables_enmascaradas_INVEMAR$batimetria, cbind(-Inf, -50, NA), right = FALSE)
 
-plot(variables_COL$temperatura)
+plot(batimetria)
 
+# enmascarar 
+
+variables_a_enmascarar <- c(variables_enmascaradas_INVEMAR$clorofila, 
+                            variables_enmascaradas_INVEMAR$salinidad, 
+                            variables_enmascaradas_INVEMAR$temperatura, 
+                            variables_enmascaradas_INVEMAR$velocidad_corriente, 
+                            variables_enmascaradas_INVEMAR$pH, 
+                            variables_enmascaradas_INVEMAR$distancia_costa)
+
+variables_enmascaradas_50m <- mask(variables_a_enmascarar, batimetria)
+
+plot(variables_enmascaradas_50m)
+
+#concatenar variables ya procesadas
+
+variables_limpias <- c(variables_enmascaradas_50m$clorofila, 
+                       variables_enmascaradas_50m$salinidad, 
+                       variables_enmascaradas_50m$temperatura, 
+                       variables_enmascaradas_50m$velocidad_corriente, 
+                       variables_enmascaradas_50m$pH,
+                       batimetria,
+                       variables_enmascaradas_50m$distancia_costa)
+
+#verificar nuevamente
+plot(variables_limpias)
 
 #volver una lista, para iterar
-variables_COL <- as.list(variables_COL)
+variables_caribe_COL_50m <- as.list(variables_limpias)
 nombres_capas <- as.list(nombres_capas)
 
 #GUARDAR CAPAS YA PROCESADAS PARA COLOMBIA
 
 # Crear carpeta donde guardar los archivos
-dir.create("BIO_MARS_limpias_COL", showWarnings = FALSE)
+dir.create("BIO_MARS_limpias_caribe_COL_50m", showWarnings = FALSE)
 
 # Guardar cada raster
-for (i in seq_along(variables_COL)) {
+for (i in seq_along(variables_caribe_COL_50m)) {
   writeRaster(
-    variables_COL[[i]],
-    filename = file.path("BIO_MARS_limpias_COL", paste0(nombres_capas[[i]], ".tif")),
+    variables_caribe_COL_50m[[i]],
+    filename = file.path("BIO_MARS_limpias_caribe_COL_50m", paste0(nombres_capas[[i]], ".tif")),
     overwrite = TRUE
   )
 }
-
-#limpiar todo menos lo necesario
-
-
-file.choose()
-
-batimetria <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\batimetria.tif")
-clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\clorofila.tif")
-distancia_costa <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\distancia_costa.tif")
-pH <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\pH.tif")
-salinidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\salinidad.tif")
-temperatura <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\temperatura.tif")
-velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_COL\\velocidad_corriente.tif")
-
-#CORRELACIÓN DE CAPAS
-variables_raster  <- c(batimetria, clorofila, distancia_costa, pH, 
-                       salinidad, temperatura, velocidad_corriente)
-
-#correlacion de pearson con terra
-correlacion_capas <- layerCor(variables_raster,"pearson", na.rm = TRUE)
-
-
-#matriz de correlación
-matriz_cor <- correlacion_capas$correlation
-
-correlación_df <- as.data.frame(matriz_cor, row.names = row.names(matriz_cor))
- 
-# ilustrando matriz de corr
-corrplot(matriz_cor,
-         method = "circle", # "circle", "square", "ellipse", "number", "shade", "color", "pie"
-         type = "upper",    # "upper", "lower", "full" - muestra solo la parte superior (sin duplicados)
-         tl.col = "black",  # Color de las etiquetas de texto
-         tl.srt = 45,       # Ángulo de las etiquetas (para que no se superpongan)
-         diag = FALSE,      # No mostrar los valores de correlación de una variable consigo misma (siempre 1)
-         col = COL2("RdBu", 200)) # Paleta de colores: RdBu para rojo-azul (negativo-positivo)
-
-colnames(correlación_df)
-
-#extraer valores altamente correlacionados
-correlación_df %>% 
-  rownames_to_column(var = "VARIABLES1") %>% 
-pivot_longer(cols = -VARIABLES1,
-             values_to = "CORRELACION",
-             names_to = "VARIABLES2") %>% 
-  filter(CORRELACION >= 0.7 | CORRELACION <= -0.7) %>%
-  filter(VARIABLES1 != VARIABLES2) %>% 
-  view()
-
-
-# VARIABLES A ELIMINAR
-
-rm(productividad_primaria, curvatura_perfil, curvatura_plana, pendiente_batimetrica, salinidad_rango)
-
-rm(aspecto_EO, aspecto_NS, direccion_corriente, pH_rango, temp_rango)
-
-rm(concavidad)
-
-
-
-
-# tratar valores noNA problematicos en las capas
-
-distancia_costa[is.nan(distancia_costa)] <- NA
-
-# Ahora, asegurémonos de que todas sean numéricas.
-# Aunque SpatRaster ya son numéricos en esencia, esto no está de más
-# para asegurar que R los trate como tales en el dataframe.
-batimetria <- as.numeric(batimetria)
-clorofila <- as.numeric(clorofila)
-distancia_costa <- as.numeric(distancia_costa) # ¡Crucial!
-pH <- as.numeric(pH)
-salinidad <- as.numeric(salinidad)
-temperatura <- as.numeric(temperatura)
-velocidad_corriente <- as.numeric(velocidad_corriente)
-
-
-#calcular VIF  a las variables restantes
-
-#haciendo el data.frame
-variables_raster_para_vif <-  c(batimetria, clorofila, distancia_costa, pH, 
-                                salinidad, temperatura, velocidad_corriente)
-
-variables_vif_df <- as.data.frame(variables_raster_para_vif)
-
-
-#modelo lm arbitrario
-modelo_vif_sencillo <- lm(batimetria ~ ., data = variables_vif_df)
-
-summary(modelo_vif_sencillo)
-
-# 5. Calcular y mostrar los VIFs
-resultados_vif <- vif(modelo_vif_sencillo)
-
-resultados_vif
-
-# eliminar oxigeno_disuelto por un VIF de 8.612113
-
-variables_vif_df_sin_oxigeno <- variables_vif_df %>%
-  select(-oxigeno_disuelto)
-
-modelo_lm_sin_oxigeno <- lm(batimetria ~ ., data = variables_vif_df_sin_oxigeno)
-
-resultado_vif_sin_oxigeno <- vif(modelo_lm_sin_oxigeno)
-
 
