@@ -93,3 +93,31 @@ print(resultado_vif_sin_salinidad)
 
 resultado_vif_sin_salinidad
 
+#LIMPIAR ENTORNO 
+
+rm(list = ls())
+
+# cargar nuevamente las variables del caribe 50m, menos salinidad
+
+variables_limpias_caribe <- c(batimetria,
+                              clorofila,
+                              distancia_costa,
+                              pH,
+                              temperatura,
+                              velocidad_corriente)
+
+
+#crear puntos de fondo
+set.seed(42)
+puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 740,
+                                  "random", na.rm = TRUE, as.points = TRUE)
+# visualizar
+plot(puntos_fondo_crudos)
+
+plot(variables_limpias_caribe, 1)
+points(puntos_fondo_crudos, cex = 0.1)
+
+
+# guardar capa vectorial
+writeVector(puntos_fondo_crudos, "puntos_fondo_crudos.shp")
+
