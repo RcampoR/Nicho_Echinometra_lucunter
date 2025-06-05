@@ -5,12 +5,23 @@ library(rJava)
 library(ggplot2)
 
 #CARGAR VARIABLES
-batimetria <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\batimetria.tif")
-clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\clorofila.tif")
-distancia_costa <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\distancia_costa.tif")
-pH <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\pH.tif")
-temperatura <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\temperatura.tif")
-velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\velocidad_corriente.tif")
+pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
+
+variables_raster_base <- c(
+  rast(file.path(pack_variables_base, "batimetria.tif")),
+  rast(file.path(pack_variables_base, "clorofila.tif")),
+  rast(file.path(pack_variables_base, "distancia_costa.tif")),
+  rast(file.path(pack_variables_base, "pH.tif")),
+  rast(file.path(pack_variables_base, "temperatura.tif")),
+  rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
+)
+
+names(variables_raster_base) <- c("batimetria", 
+                                  "clorofila", 
+                                  "distancia_costa", 
+                                  "pH", 
+                                  "temperatura", 
+                                  "velocidad_corriente")
 
 # CARGAR OCURRENCIA
 
@@ -59,8 +70,8 @@ if (requireNamespace("rJava", quietly = TRUE)) {
 # Si tienes pocos datos (< 50-100), podrías mantener las FCs más simples (L, LQ, H).
 # Si tienes muchos (>200), puedes explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considera tu número de puntos de presencia 
-ENMeval_RMs <- c(0.5, 1, 2, 3, 4, 5) # Puedes ajustar este rango
+ENMeval_FCs <- c("L", "LQ", "H", "LQH", "LQHP") # Considera tu número de puntos de presencia 
+ENMeval_RMs <- seq(1.0, 3.0, by = 0.2) # Puedes ajustar este rango
 
 # Ejecutar ENMeval con validación cruzada espacial
 message("\nIniciando la evaluación de hiperparámetros con ENMeval (versión 1.x.x). Esto puede tomar tiempo...")
@@ -103,5 +114,23 @@ message("\nColumnas disponibles para análisis:")
 print(colnames(eval_df))
 
 
+# GUARDAR TODOS LOS MODELOS ENTRENADOS
+
+saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales.rds")
 
 
+
+# MODELO LQ_rm_2.0
+
+LQ_rm_2.0 <- eval_results@models[["fc.LQ_rm.2"]]
+
+# guardar modelo 
+
+saveRDS(LQ_rm_2.0, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\ESPECIFICOS\\ENMeval_LQ_rm_2.0.rds")
+
+
+mapa_idoneidad <- terra::predict(variables_raster, LQ_rm_2.0, type = "logistic", clamp = TRUE)
+
+# guardar mapa 
+
+writeRaster(mapa_idoneidad, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MAPAS\\capa_idoneidad_E_lucunter.tif")

@@ -4,14 +4,17 @@ library(corrplot)
 library(car)
 
 
-batimetria <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\batimetria.tif")
-clorofila <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\clorofila.tif")
-distancia_costa <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\distancia_costa.tif")
-pH <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\pH.tif")
-salinidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\salinidad.tif")
-temperatura <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\temperatura.tif")
-velocidad_corriente <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m\\velocidad_corriente.tif")
+pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
 
+variables_raster_optimista <- c(
+  rast(file.path(pack_variables_base, "batimetria.tif")),
+  rast(file.path(pack_variables_base, "clorofila.tif")),
+  rast(file.path(pack_variables_base, "distancia_costa.tif")),
+  rast(file.path(pack_variables_base, "pH.tif")),
+  rast(file.path(pack_variables_base, "temperatura.tif")),
+  rast(file.path(pack_variables_base, "velocidad_corriente.tif")),
+  rast(file.path(pack_variables_base, "salinidad.tif"))
+)
 #CORRELACIÓN DE CAPAS
 variables_raster  <- c(batimetria, clorofila, distancia_costa, pH, 
                        salinidad, temperatura, velocidad_corriente)
