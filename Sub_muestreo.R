@@ -47,7 +47,7 @@ raster_1 <- rast(vector_1)
 
 # se establece la resolución (se recomienda en base al home range)
 
-res(raster_1) <- 0.009 # 1 km
+res(raster_1) <- 0.018 # 2 km
 
 # se expanden las celdas 
 

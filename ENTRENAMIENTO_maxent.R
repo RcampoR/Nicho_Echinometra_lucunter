@@ -2,26 +2,18 @@ library(terra)
 library(dplyr)
 library(ENMeval)
 library(rJava)
-library(ggplot2)
+
 
 #CARGAR VARIABLES
 pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
 
-variables_raster_base <- c(
-  rast(file.path(pack_variables_base, "batimetria.tif")),
-  rast(file.path(pack_variables_base, "clorofila.tif")),
-  rast(file.path(pack_variables_base, "distancia_costa.tif")),
-  rast(file.path(pack_variables_base, "pH.tif")),
-  rast(file.path(pack_variables_base, "temperatura.tif")),
-  rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
-)
+batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
+clorofila <- rast(file.path(pack_variables_base, "clorofila.tif"))
+distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
+pH <- rast(file.path(pack_variables_base, "pH.tif"))
+temperatura <- rast(file.path(pack_variables_base, "temperatura.tif"))
+velocidad_corriente <- rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
 
-names(variables_raster_base) <- c("batimetria", 
-                                  "clorofila", 
-                                  "distancia_costa", 
-                                  "pH", 
-                                  "temperatura", 
-                                  "velocidad_corriente")
 
 # CARGAR OCURRENCIA
 
@@ -41,9 +33,9 @@ variables_raster <- c(batimetria,
 
 # CARGAR PUNTOS DE FONDO
 
-puntos_fondo_crudos <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\puntos_fondo_crudos.shp")
+puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\puntos_fondo_submuestreados.shp")
 
-puntos_fondo_df <- as.data.frame(geom(puntos_fondo_crudos)) %>%
+puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
   dplyr::select(x, y) %>%
   dplyr::rename(lon = x, lat = y)
 
@@ -70,8 +62,8 @@ if (requireNamespace("rJava", quietly = TRUE)) {
 # Si tienes pocos datos (< 50-100), podrías mantener las FCs más simples (L, LQ, H).
 # Si tienes muchos (>200), puedes explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H", "LQH", "LQHP") # Considera tu número de puntos de presencia 
-ENMeval_RMs <- seq(1.0, 3.0, by = 0.2) # Puedes ajustar este rango
+ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considera tu número de puntos de presencia 
+ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # Puedes ajustar este rango
 
 # Ejecutar ENMeval con validación cruzada espacial
 message("\nIniciando la evaluación de hiperparámetros con ENMeval (versión 1.x.x). Esto puede tomar tiempo...")
