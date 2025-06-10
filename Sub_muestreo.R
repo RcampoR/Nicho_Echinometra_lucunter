@@ -47,7 +47,7 @@ raster_1 <- rast(vector_1)
 
 # se establece la resolución (se recomienda en base al home range)
 
-res(raster_1) <- 0.018 # 2 km
+res(raster_1) <- 0.009 # 1 km
 
 # se expanden las celdas 
 
@@ -57,7 +57,7 @@ set.seed(456)
 
 vector_submuestreo <- spatSample(vector_1, size= 1, "random", strata=raster_1)
 
-# MAPA SUBMUESTREO
+# MAPA SUBMUESTREO (solo correr si es necesario, muy exigente computacionalmente)
 
 # Mostrar mapa submuestreo
 
@@ -68,10 +68,6 @@ points(vector_1)
 # PUNTOS DE SUBMUESTREO
 
 points(raster_submuestreo, cex=1, col='red', pch='x')
-
-#GRAFICAR CON LINEAS
-plot(vector_1, col = "red4")
-lines(mundo, col='gray26', lwd=2)
 
 
 #GUARDAR COMO CSV LOS DATOS LIMPIOS

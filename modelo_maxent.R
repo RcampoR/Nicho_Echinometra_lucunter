@@ -2,9 +2,16 @@ library(terra)
 library(dplyr)
 library(ENMeval)
 library(rJava)
+library(dismo)
+library(raster)
+
+# limpiar entorno 
+rm(list = ls())
+gc()
 
 
 #CARGAR VARIABLES
+
 pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
 
 batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
@@ -19,8 +26,11 @@ velocidad_corriente <- rast(file.path(pack_variables_base, "velocidad_corriente.
 
 ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv") %>% 
                           transmute(lon = decimalLongitude,
-                                    lat = decimalLatitude)
+                                    lat = decimalLatitude) 
+
+ocurrencias_E_lucunter <- as.data.frame(ocurrencias_E_lucunter)
                           
+class(ocurrencias_E_lucunter)
 
 #CARGAR VARIABLES DEL CARIBE COLOMBIANO A 50M DE BATIMETRIA
 
@@ -31,9 +41,11 @@ variables_raster <- c(batimetria,
                       temperatura,
                       velocidad_corriente)
 
+variables_raster <- brick(variables_raster)
+
 # CARGAR PUNTOS DE FONDO
 
-puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\puntos_fondo_submuestreados.shp")
+puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\puntos_fondo_crudos.shp")
 
 puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
   dplyr::select(x, y) %>%
@@ -62,8 +74,10 @@ if (requireNamespace("rJava", quietly = TRUE)) {
 # Si tienes pocos datos (< 50-100), podrías mantener las FCs más simples (L, LQ, H).
 # Si tienes muchos (>200), puedes explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considera tu número de puntos de presencia 
+ENMeval_FCs <- c("L", "LQ", "H") # Considera tu número de puntos de presencia 
+
 ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # Puedes ajustar este rango
+
 
 # Ejecutar ENMeval con validación cruzada espacial
 message("\nIniciando la evaluación de hiperparámetros con ENMeval (versión 1.x.x). Esto puede tomar tiempo...")
@@ -83,7 +97,8 @@ eval_results <- ENMeval::ENMevaluate(
   other.settings = list(
     "outputformat=logistic",
     "betamultiplier=1",
-    doClamp = TRUE # doClamp también puede ir aquí, si no es un argumento directo de ENMevaluate
+    doClamp = TRUE, # doClamp también puede ir aquí, si no es un argumento directo de ENMevaluate
+    other.args = c("jackknife=TRUE", "responsecurves=TRUE")
   ),
   parallel = TRUE,
   numCores = parallel::detectCores() - 1,
@@ -105,24 +120,46 @@ print(head(eval_df))
 message("\nColumnas disponibles para análisis:")
 print(colnames(eval_df))
 
+eval_df[eval_df$tune.args == "fc.LQ_rm.3", ]
 
-# GUARDAR TODOS LOS MODELOS ENTRENADOS
+# GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
 saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales.rds")
 
 
+# GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
-# MODELO LQ_rm_2.0
+saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales.rds")
 
-LQ_rm_2.0 <- eval_results@models[["fc.LQ_rm.2"]]
+# Definir los parámetros óptimos seleccionados explícitamente
 
-# guardar modelo 
+best_fc <- "LQ"
+best_rm <- 3.0
 
-saveRDS(LQ_rm_2.0, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\ESPECIFICOS\\ENMeval_LQ_rm_2.0.rds")
 
+# ENTRENAR MODELO FINAL fc.LQ_rm.3
 
-mapa_idoneidad <- terra::predict(variables_raster, LQ_rm_2.0, type = "logistic", clamp = TRUE)
+Modelo_LQ_rm_3 <- maxent(x = variables_raster, 
+                         p = ocurrencias_E_lucunter[, c("lon", "lat")],
+                         a = puntos_fondo_df, # Puedes usar los mismos puntos de fondo si son representativos del M
+                         args = c(paste0("betamultiplier=", best_rm),
+                                  "outputformat=logistic",
+                                  "responsecurves=TRUE",
+                                  "jackknife=TRUE",
+                                  "doclamp=TRUE",
+                                  "linear=true",    # <-- NUEVA LÍNEA
+                                  "quadratic=true") # <-- NUEVA LÍNEA
+                                                                      )
 
-# guardar mapa 
+# PREDICCIONES
 
-writeRaster(mapa_idoneidad, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MAPAS\\capa_idoneidad_E_lucunter.tif")
+Raster_idoneidad <- predict(variables_raster, Modelo_LQ_rm_3, type = "logistic")
+
+# guardar raster_idoneidad
+
+writeRaster(Raster_idoneidad, filename = "Raster_idoneidad.tif")
+
+# guardar modelo final
+
+saveRDS(Modelo_LQ_rm_3, "Modelo_LQ_rm_3.rds")
+

@@ -6,6 +6,7 @@ library(car)
 
 pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
 
+
 batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
 clorofila <- rast(file.path(pack_variables_base, "clorofila.tif"))
 distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
@@ -14,14 +15,12 @@ temperatura <- rast(file.path(pack_variables_base, "temperatura.tif"))
 velocidad_corriente <- rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
 salinidad <- rast(file.path(pack_variables_base, "salinidad.tif"))
 
+
 #BASE ECHINOMETRA SUBMUESTREADA
 ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv") %>% 
   transmute(lon = decimalLongitude,
             lat = decimalLatitude) %>% 
   vect()
-
-
-
 
 
 
@@ -121,36 +120,11 @@ variables_limpias_caribe <- c(batimetria,
 
 
 #CREANDO PUNTOS DE FONDO
-set.seed(42)
+set.seed(456)
 puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 740,
                                   "random", na.rm = TRUE, as.points = TRUE)
 
-# TRATANDO EL SESGO DE MUESTREO PUNTOS FONDO
-
-# se crea un raster en base al vector 
-raster_ocurrencias <- rast(ocurrencias_E_lucunter)
-
-# se establece la resolución (se recomienda en base al home range)
-
-res(raster_ocurrencias) <- 0.018 # < 1 km
-
-# se expanden las celdas 
-
-raster_ocurrencias <- extend(raster_ocurrencias, ext(raster_ocurrencias)+0.1)
-
-set.seed(456)
-
-puntos_fondo_submuestreados <- spatSample(ocurrencias_E_lucunter, size= 1, 
-                                          "random", strata= raster_ocurrencias) 
-  
-# visualizar
-plot(puntos_fondo_crudos)
-plot(puntos_fondo_submuestreados)
-
-plot(variables_limpias_caribe, 1)
-points(puntos_fondo_crudos, cex = 0.1)
-
 
 # guardar capa vectorial
-writeVector(puntos_fondo_submuestreados, "puntos_fondo_submuestreados.shp")
+writeVector(puntos_fondo_crudos, "puntos_fondo_crudos.shp")
 

@@ -104,7 +104,7 @@ nombres_capas <- c("clorofila",
 
 names(variables_raster) <- nombres_capas
 
-#REPROYECTAR MAR CARIBE EN BASE A LAS VARIABLES
+#REPROYECTAR MAR CARIBE CON BASE A LAS VARIABLES
 
 Mar_caribe_INVEMAR <- project(Mar_caribe_INVEMAR, crs(variables_raster))
 
