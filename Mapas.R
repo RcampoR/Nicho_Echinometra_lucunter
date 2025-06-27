@@ -3,6 +3,10 @@ library(tmap)
 library(tidyverse)
 library(geodata)
 
+#limpiar entorno
+rm(list = ls())
+gc()
+
 #vectores
 Colombia <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\gadm36_COL_0.shp")
 

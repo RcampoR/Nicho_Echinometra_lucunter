@@ -2,11 +2,15 @@ library(tidyverse)
 library(terra)
 library(geodata)
 
+#limpiar entorno
+rm(list = ls())
+gc()
+
 # cargar Base de datos 
-Base_Colombia <- read_delim("DB_E_lucunter_CO_limpia.csv")
+Base_Caribe <- read_delim("DB_E_lucunter_Caribe_limpia.csv")
 
 ## usaremos un vector de la libreria terra
-vector_1 <- vect(Base_Colombia, geom = c("longitud", "latitud"), crs = 4326)
+vector_1 <- vect(Base_Caribe, geom = c("longitud", "latitud"), crs = 4326)
 
 class(vector_1)
 
@@ -51,7 +55,7 @@ res(raster_1) <- 0.009 # 1 km
 
 # se expanden las celdas 
 
-raster_1 <- extend(raster_1, ext(raster_1)+0.1)
+raster_1 <- extend(raster_1, ext(raster_1)+0.01)
 
 set.seed(456)
 
@@ -73,4 +77,4 @@ points(raster_submuestreo, cex=1, col='red', pch='x')
 #GUARDAR COMO CSV LOS DATOS LIMPIOS
 
 as.data.frame(vector_submuestreo) %>% 
-write_csv(file = "BD_E_lucunter_submuestreado_COL.csv")
+write_csv(file = "BD_E_lucunter_submuestreado_Caribe.csv")

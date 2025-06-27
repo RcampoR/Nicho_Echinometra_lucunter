@@ -2,9 +2,12 @@ library(terra)
 library(tidyverse)
 library(corrplot)
 library(car)
+library(tmap)
+#limpiar entorno
+rm(list = ls())
+gc()
 
-
-pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
+pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_convexo_50m"
 
 
 batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
@@ -12,12 +15,14 @@ clorofila <- rast(file.path(pack_variables_base, "clorofila.tif"))
 distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
 pH <- rast(file.path(pack_variables_base, "pH.tif"))
 temperatura <- rast(file.path(pack_variables_base, "temperatura.tif"))
-velocidad_corriente <- rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
 salinidad <- rast(file.path(pack_variables_base, "salinidad.tif"))
+
+# En otros modelos la velocidad de la corriente no aporta nada, mejor dejar salinidad
+#####velocidad_corriente <- rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
 
 
 #BASE ECHINOMETRA SUBMUESTREADA
-ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv") %>% 
+ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_Caribe.csv") %>% 
   transmute(lon = decimalLongitude,
             lat = decimalLatitude) %>% 
   vect()
@@ -26,7 +31,7 @@ ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv
 
 #CORRELACIÓN DE CAPAS
 variables_raster  <- c(batimetria, clorofila, distancia_costa, pH, 
-                       salinidad, temperatura, velocidad_corriente)
+                       salinidad, temperatura)
 
 #correlacion de pearson con terra
 correlacion_capas <- layerCor(variables_raster,"pearson", na.rm = TRUE)
@@ -75,7 +80,7 @@ velocidad_corriente <- as.numeric(velocidad_corriente)
 
 #haciendo el data.frame
 variables_raster_para_vif <-  c(batimetria, clorofila, distancia_costa, pH, 
-                                salinidad, temperatura, velocidad_corriente)
+                                salinidad, temperatura)
 
 variables_vif_df <- as.data.frame(variables_raster_para_vif)
 
@@ -91,40 +96,44 @@ resultados_vif <- vif(modelo_vif_sencillo)
 resultados_vif
 
 
-# Eliminar Salinidad
-variables_vif_df_sin_salinidad <- variables_vif_df %>%
-  select(-salinidad)
-
-modelo_lm_sin_salinidad <- lm(batimetria ~ ., data = variables_vif_df_sin_salinidad)
-
-# Calcular y mostrar los VIFs del nuevo modelo
-resultado_vif_sin_salinidad <- vif(modelo_lm_sin_salinidad)
-print("--- Resultados VIF sin Salinidad ---")
-print(resultado_vif_sin_salinidad)
-
-
-resultado_vif_sin_salinidad
-
 #LIMPIAR ENTORNO 
 
 rm(list = ls())
+gc()
 
-# cargar nuevamente las variables del caribe 50m, menos salinidad
+# cargar nuevamente las variables del caribe 50m
 
 variables_limpias_caribe <- c(batimetria,
                               clorofila,
                               distancia_costa,
                               pH,
                               temperatura,
-                              velocidad_corriente)
+                              salinidad)
 
 
 #CREANDO PUNTOS DE FONDO
 set.seed(456)
-puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 740,
+puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 2160,
                                   "random", na.rm = TRUE, as.points = TRUE)
 
+# TRATANDO EL SESGO DE MUESTREO DEL FONDO
+
+# se crea un raster en base al vector 
+raster_pf <- rast(puntos_fondo_crudos)
+
+# se establece la resolución (se recomienda en base al home range)
+
+res(raster_pf) <- 0.009 # 1 km
+
+# se expanden las celdas 
+
+raster_pf <- extend(raster_pf, ext(raster_pf)+0.1)
+
+set.seed(456)
+
+
+pf_submuestreados <- spatSample(puntos_fondo_crudos, size= 1, "random", strata=raster_pf)
 
 # guardar capa vectorial
-writeVector(puntos_fondo_crudos, "puntos_fondo_crudos.shp")
+writeVector(puntos_fondo_crudos, "pf_crudos_convexo_submuestreados.shp")
 

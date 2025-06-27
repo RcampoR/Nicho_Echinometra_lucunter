@@ -12,44 +12,46 @@ gc()
 
 #CARGAR VARIABLES
 
-pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_COL_50m"
+pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_convexo_50m"
 
 batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
 clorofila <- rast(file.path(pack_variables_base, "clorofila.tif"))
 distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
 pH <- rast(file.path(pack_variables_base, "pH.tif"))
 temperatura <- rast(file.path(pack_variables_base, "temperatura.tif"))
-velocidad_corriente <- rast(file.path(pack_variables_base, "velocidad_corriente.tif"))
+salinidad <- rast(file.path(pack_variables_base, "salinidad.tif"))
+
+
+variables_raster <- c(
+                       batimetria,
+                       clorofila,
+                       distancia_costa,
+                       pH,
+                       temperatura,
+                       salinidad
+                       )
 
 
 # CARGAR OCURRENCIA
 
-ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv") %>% 
+ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_Caribe.csv") %>% 
                           transmute(lon = decimalLongitude,
-                                    lat = decimalLatitude) 
+                                    lat = decimalLatitude) %>% 
+  as.data.frame()
 
-ocurrencias_E_lucunter <- as.data.frame(ocurrencias_E_lucunter)
+
                           
 class(ocurrencias_E_lucunter)
 
-#CARGAR VARIABLES DEL CARIBE COLOMBIANO A 50M DE BATIMETRIA
-
-variables_raster <- c(batimetria, 
-                      clorofila,
-                      distancia_costa,
-                      pH,
-                      temperatura,
-                      velocidad_corriente)
-
-variables_raster <- brick(variables_raster)
 
 # CARGAR PUNTOS DE FONDO
 
-puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\puntos_fondo_crudos.shp")
+puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\pf_crudos_convexo_submuestreados.shp")
 
 puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
   dplyr::select(x, y) %>%
-  dplyr::rename(lon = x, lat = y)
+  dplyr::rename(lon = x, lat = y) %>% 
+  as.data.frame()
 
 #RUTA ENMEVAL 
 
@@ -74,7 +76,7 @@ if (requireNamespace("rJava", quietly = TRUE)) {
 # Si tienes pocos datos (< 50-100), podrías mantener las FCs más simples (L, LQ, H).
 # Si tienes muchos (>200), puedes explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H") # Considera tu número de puntos de presencia 
+ENMeval_FCs <- c("L", "LQ", "H", "LQH", "LQHP", "LQHPT") # Considera tu número de puntos de presencia 
 
 ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # Puedes ajustar este rango
 
@@ -120,36 +122,36 @@ print(head(eval_df))
 message("\nColumnas disponibles para análisis:")
 print(colnames(eval_df))
 
-eval_df[eval_df$tune.args == "fc.LQ_rm.3", ]
+eval_df[eval_df$tune.args == "fc.LQ_rm.1", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
-saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales.rds")
+saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales_convexo.rds")
 
-
-# GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
-
-saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales.rds")
 
 # Definir los parámetros óptimos seleccionados explícitamente
 
 best_fc <- "LQ"
-best_rm <- 3.0
+best_rm <- 1.0
+
+#DISMO ACEPTA SOLO RASTER DE Raster
+
+variables_raster <- brick(variables_raster)
 
 
-# ENTRENAR MODELO FINAL fc.LQ_rm.3
+# ENTRENAR MODELO FINAL fc.LQ_rm.1
 
-Modelo_LQ_rm_3 <- maxent(x = variables_raster, 
+Modelo_LQ_rm_1 <- maxent(x = variables_raster, 
                          p = ocurrencias_E_lucunter[, c("lon", "lat")],
-                         a = puntos_fondo_df, # Puedes usar los mismos puntos de fondo si son representativos del M
+                         a = puntos_fondo_df, 
                          args = c(paste0("betamultiplier=", best_rm),
                                   "outputformat=logistic",
                                   "responsecurves=TRUE",
                                   "jackknife=TRUE",
                                   "doclamp=TRUE",
-                                  "linear=true",    # <-- NUEVA LÍNEA
-                                  "quadratic=true") # <-- NUEVA LÍNEA
-                                                                      )
+                                  "linear=true",    
+                                  "quadratic=true")) 
+                                                                      
 
 # PREDICCIONES
 
