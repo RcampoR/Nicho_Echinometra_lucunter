@@ -10,7 +10,7 @@ gc()
 #vectores
 Colombia <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\gadm36_COL_0.shp")
 
-ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv") %>% 
+ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_Caribe.csv") %>% 
   transmute(lon = decimalLongitude,
             lat = decimalLatitude) %>% 
   vect()
@@ -18,10 +18,9 @@ ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_COL.csv
 crs(ocurrencias_E_lucunter) <- "EPSG:4326"
 
 #raster
-Raster_idoneidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MAPAS\\Raster_idoneidad.tif")
+Raster_idoneidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MAPAS\\Raster_idoneidad_convexo.tif")
 
 #MAR CARIBE
-Mar_caribe_INVEMAR <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\mar_caribe.json") 
 
 
 # MAPA CONTEXTO PUNTOS OCURRENCIA

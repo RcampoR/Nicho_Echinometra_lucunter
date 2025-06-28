@@ -23,12 +23,6 @@ Base_Original %>%
   summarise(n())
 
 
-#ENCONTRAR DATO ERRONEO
-Base_Original %>% 
-  filter(decimalLongitude <= -74 & decimalLongitude >= -75.3) %>% 
-  filter(decimalLatitude >= 9 & decimalLatitude <= 10) %>% 
-  select(decimalLongitude, decimalLatitude)
-
 ### Eliminar coordenadas identicas, eliminar NA, eliminar irregularidades, fechas a partir del 2000...
 
 
@@ -54,12 +48,6 @@ Base_Caribe <- Base_Original %>%
   filter(!longitud == "-74.8112" & !latitud == "9.3829")
 
 
-### revisar fechas
-
-Base_Caribe %>% 
-  group_by(eventDate) %>% 
-  summarise(n())
-
 # revisar paises
 
 Base_Caribe %>% 
@@ -67,17 +55,11 @@ Base_Caribe %>%
   summarise(n())
 
 
-# Mapa Mundo
-mundo <- world(path=".")
-plot(mundo, xlim=c(-110,60), ylim=c(-80,40), col="light yellow", border="light gray")
-
-# PUNTOS ECHINOMETRA LUCUNTER
-points(Base_Caribe$longitud, Base_Caribe$latitud, col='red', pch=20)
-
-
 ### guardar tabla
 
-write.csv(Base_Caribe, "DB_E_lucunter_Caribe_limpia.csv")
+write.csv(Base_Caribe, "DB_E_lucunter_Caribe_limpia.csv") 
+
+
 
 
 

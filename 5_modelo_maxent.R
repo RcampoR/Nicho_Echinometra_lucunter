@@ -4,32 +4,40 @@ library(ENMeval)
 library(rJava)
 library(dismo)
 library(raster)
+library(tmap)
 
 # limpiar entorno 
 rm(list = ls())
 gc()
 
 
-#CARGAR VARIABLES
+# CARGAR VARIABLES
 
-pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_convexo_50m"
+pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_50m"
 
+# Cargando las 9 variables con sus nombres largo
+
+clorofila_media <- rast(file.path(pack_variables_base, "clorofila_media.tif"))
+salinidad_media <- rast(file.path(pack_variables_base, "salinidad_media.tif"))
+temperatura_media <- rast(file.path(pack_variables_base, "temperatura_media.tif"))
+velocidad_corriente_media <- rast(file.path(pack_variables_base, "velocidad_corriente_media.tif"))
+ph_medio <- rast(file.path(pack_variables_base, "ph_medio.tif"))
+ph_rango <- rast(file.path(pack_variables_base, "ph_rango.tif"))
 batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
-clorofila <- rast(file.path(pack_variables_base, "clorofila.tif"))
 distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
-pH <- rast(file.path(pack_variables_base, "pH.tif"))
-temperatura <- rast(file.path(pack_variables_base, "temperatura.tif"))
-salinidad <- rast(file.path(pack_variables_base, "salinidad.tif"))
+concavidad <- rast(file.path(pack_variables_base, "concavidad.tif"))
 
 
 variables_raster <- c(
-                       batimetria,
-                       clorofila,
-                       distancia_costa,
-                       pH,
-                       temperatura,
-                       salinidad
-                       )
+  clorofila_media,
+  salinidad_media,
+  temperatura_media,
+  velocidad_corriente_media,
+  ph_medio,
+  ph_rango,
+  batimetria,
+  distancia_costa,
+  concavidad)
 
 
 # CARGAR OCURRENCIA
@@ -46,7 +54,7 @@ class(ocurrencias_E_lucunter)
 
 # CARGAR PUNTOS DE FONDO
 
-puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\pf_crudos_convexo_submuestreados.shp")
+puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\pf_crudos_caribe_submuestreados.shp")
 
 puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
   dplyr::select(x, y) %>%
@@ -57,17 +65,6 @@ puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
 
 options(ENMeval.maxent.jar = "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\maxent_software\\maxent.jar")
 
-# Verificar si MaxEnt está configurado correctamente
-if (requireNamespace("rJava", quietly = TRUE)) {
-  if (is.character(getOption("ENMeval.maxent.jar"))) {
-    message("MaxEnt.jar path is set: ", getOption("ENMeval.maxent.jar"))
-  } else {
-    warning("MaxEnt.jar path is not set correctly. Please check options(ENMeval.maxent.jar = ...)")
-  }
-} else {
-  warning("rJava package is not installed or loaded. MaxEnt functionality may be limited.")
-}
-
 # ---  Realizar la evaluación y optimización con ENMeval ---
 
 # Definir las combinaciones de Feature Classes (FC) y Regularization Multipliers (RM) a probar
@@ -76,7 +73,7 @@ if (requireNamespace("rJava", quietly = TRUE)) {
 # Si tienes pocos datos (< 50-100), podrías mantener las FCs más simples (L, LQ, H).
 # Si tienes muchos (>200), puedes explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H", "LQH", "LQHP", "LQHPT") # Considera tu número de puntos de presencia 
+ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considera tu número de puntos de presencia 
 
 ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # Puedes ajustar este rango
 
@@ -117,22 +114,18 @@ Sys.sleep(2) # Pausa para asegurar que el mensaje sea visible
 
 # Convertir los resultados a un data.frame para un análisis más fácil
 eval_df <- eval_results@results
-message("\nResultados de la evaluación de hiperparámetros (primeras filas):")
-print(head(eval_df))
-message("\nColumnas disponibles para análisis:")
-print(colnames(eval_df))
 
-eval_df[eval_df$tune.args == "fc.LQ_rm.1", ]
+eval_df[eval_df$tune.args == "fc.LQH_rm.3.5", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
-saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales_convexo.rds")
+saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales_caribe.rds")
 
 
 # Definir los parámetros óptimos seleccionados explícitamente
 
-best_fc <- "LQ"
-best_rm <- 1.0
+best_fc <- "LQH"
+best_rm <- 3.5
 
 #DISMO ACEPTA SOLO RASTER DE Raster
 
@@ -141,7 +134,7 @@ variables_raster <- brick(variables_raster)
 
 # ENTRENAR MODELO FINAL fc.LQ_rm.1
 
-Modelo_LQ_rm_1 <- maxent(x = variables_raster, 
+Modelo_LQH_rm_3.5 <- maxent(x = variables_raster, 
                          p = ocurrencias_E_lucunter[, c("lon", "lat")],
                          a = puntos_fondo_df, 
                          args = c(paste0("betamultiplier=", best_rm),
@@ -150,18 +143,27 @@ Modelo_LQ_rm_1 <- maxent(x = variables_raster,
                                   "jackknife=TRUE",
                                   "doclamp=TRUE",
                                   "linear=true",    
-                                  "quadratic=true")) 
+                                  "quadratic=true",
+                                  "hinge=true")) 
                                                                       
 
 # PREDICCIONES
 
-Raster_idoneidad <- predict(variables_raster, Modelo_LQ_rm_3, type = "logistic")
+Raster_idoneidad <- predict(variables_raster, Modelo_LQH_rm_3.5, type = "logistic")
+
+tmap_mode("plot")
+
+tm_shape(Raster_idoneidad) +
+  tm_raster()
+
 
 # guardar raster_idoneidad
 
-writeRaster(Raster_idoneidad, filename = "Raster_idoneidad.tif")
+writeRaster(Raster_idoneidad, filename = "Raster_idoneidad_caribe.tif")
 
 # guardar modelo final
 
-saveRDS(Modelo_LQ_rm_3, "Modelo_LQ_rm_3.rds")
+saveRDS(Modelo_LQH_rm_3.5, "Modelo_LQH_rm_3.5.rds")
+
+
 
