@@ -18,26 +18,23 @@ pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_luc
 # Cargando las 9 variables con sus nombres largo
 
 clorofila_media <- rast(file.path(pack_variables_base, "clorofila_media.tif"))
-salinidad_media <- rast(file.path(pack_variables_base, "salinidad_media.tif"))
-temperatura_media <- rast(file.path(pack_variables_base, "temperatura_media.tif"))
 velocidad_corriente_media <- rast(file.path(pack_variables_base, "velocidad_corriente_media.tif"))
-ph_medio <- rast(file.path(pack_variables_base, "ph_medio.tif"))
 ph_rango <- rast(file.path(pack_variables_base, "ph_rango.tif"))
 batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
 distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
 concavidad <- rast(file.path(pack_variables_base, "concavidad.tif"))
-
+salinidad_rango <- rast(file.path(pack_variables_base, "salinidad_rango.tif"))
+temperatura_rango <- rast(file.path(pack_variables_base, "temperatura_rango.tif"))
 
 variables_raster <- c(
   clorofila_media,
-  salinidad_media,
-  temperatura_media,
   velocidad_corriente_media,
-  ph_medio,
   ph_rango,
   batimetria,
   distancia_costa,
-  concavidad)
+  concavidad,
+  salinidad_rango,
+  temperatura_rango)
 
 
 # CARGAR OCURRENCIA
@@ -115,7 +112,7 @@ Sys.sleep(2) # Pausa para asegurar que el mensaje sea visible
 # Convertir los resultados a un data.frame para un análisis más fácil
 eval_df <- eval_results@results
 
-eval_df[eval_df$tune.args == "fc.LQH_rm.3.5", ]
+eval_df[eval_df$tune.args == "fc.LQ_rm.1", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
@@ -124,8 +121,8 @@ saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucu
 
 # Definir los parámetros óptimos seleccionados explícitamente
 
-best_fc <- "LQH"
-best_rm <- 3.5
+best_fc <- "LQ"
+best_rm <- 1
 
 #DISMO ACEPTA SOLO RASTER DE Raster
 
@@ -134,7 +131,7 @@ variables_raster <- brick(variables_raster)
 
 # ENTRENAR MODELO FINAL fc.LQ_rm.1
 
-Modelo_LQH_rm_3.5 <- maxent(x = variables_raster, 
+Modelo_LQ_rm_1 <- maxent(x = variables_raster, 
                          p = ocurrencias_E_lucunter[, c("lon", "lat")],
                          a = puntos_fondo_df, 
                          args = c(paste0("betamultiplier=", best_rm),
@@ -143,15 +140,17 @@ Modelo_LQH_rm_3.5 <- maxent(x = variables_raster,
                                   "jackknife=TRUE",
                                   "doclamp=TRUE",
                                   "linear=true",    
-                                  "quadratic=true",
-                                  "hinge=true")) 
+                                  "quadratic=true", # FALSE O TRUE???
+                                  "hinge=false",     
+                                  "product=false",   
+                                  "threshold=false")) 
                                                                       
 
 # PREDICCIONES
 
-Raster_idoneidad <- predict(variables_raster, Modelo_LQH_rm_3.5, type = "logistic")
+Raster_idoneidad <- predict(variables_raster, Modelo_LQ_rm_1, type = "logistic")
 
-tmap_mode("plot")
+tmap_mode("view")
 
 tm_shape(Raster_idoneidad) +
   tm_raster()
@@ -163,7 +162,5 @@ writeRaster(Raster_idoneidad, filename = "Raster_idoneidad_caribe.tif")
 
 # guardar modelo final
 
-saveRDS(Modelo_LQH_rm_3.5, "Modelo_LQH_rm_3.5.rds")
-
-
+saveRDS(Modelo_LQ_rm_1, "Modelo_LQ_rm_1.rds")
 
