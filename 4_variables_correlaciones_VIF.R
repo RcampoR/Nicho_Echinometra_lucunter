@@ -114,8 +114,8 @@ correlación_df %>%
 
 variables_restantes <- list(
   clorofila_media,
-  salinidad_media,
-  temperatura_media,
+  salinidad_rango,
+  temperatura_rango,
   velocidad_corriente_media,
   direccion_corriente_media,
   ph_medio,
@@ -133,8 +133,8 @@ variables_restantes <- list(
 #haciendo el data.frame
 variables_raster_para_vif <- c(
   clorofila_media,
-  salinidad_media,
-  temperatura_media,
+  salinidad_rango,
+  temperatura_rango,
   velocidad_corriente_media,
   direccion_corriente_media,
   ph_medio,
@@ -167,10 +167,9 @@ resultados_vif
 
 #haciendo el data.frame
 variables_vif_validas <-  c(clorofila_media,
-                            salinidad_media,
-                            temperatura_media,
+                            salinidad_rango,
+                            temperatura_rango,
                             velocidad_corriente_media,
-                            ph_medio,
                             ph_rango,
                             batimetria,
                             distancia_costa,
@@ -200,10 +199,9 @@ gc()
 # cargar nuevamente las variables del caribe 50m
 
 variables_limpias_caribe <- c(clorofila_media,
-                              salinidad_media,
-                              temperatura_media,
+                              salinidad_rango,
+                              temperatura_rango,
                               velocidad_corriente_media,
-                              ph_medio,
                               ph_rango,
                               batimetria,
                               distancia_costa,
