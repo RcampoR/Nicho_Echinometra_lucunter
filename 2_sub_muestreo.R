@@ -1,6 +1,5 @@
 library(tidyverse)
 library(terra)
-library(geodata)
 
 #limpiar entorno
 rm(list = ls())

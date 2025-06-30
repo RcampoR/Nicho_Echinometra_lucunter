@@ -2,7 +2,7 @@ library(terra)
 library(tidyverse)
 library(corrplot)
 library(car)
-library(tmap)
+
 
 
 #limpiar entorno

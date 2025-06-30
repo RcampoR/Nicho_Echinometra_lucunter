@@ -103,7 +103,7 @@ oxigeno_disuelto_medio[oxigeno_disuelto_medio == NO_DATA_VALUE_BIOORACLE] <- NA
 
 # pH
 ph_medio[ph_medio == NO_DATA_VALUE_BIOORACLE] <- NA
-ph_rango[ph_rango == NO_DATA_VALUE_BIOORACLE] <- NA # ¡Añadido para pH_rango!
+ph_rango[ph_rango == NO_DATA_VALUE_BIOORACLE] <- NA 
 
 # Productividad primaria
 productividad_primaria_media[productividad_primaria_media == NO_DATA_VALUE_BIOORACLE] <- NA

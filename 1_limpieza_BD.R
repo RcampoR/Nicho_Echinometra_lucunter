@@ -1,7 +1,4 @@
 library(tidyverse)
-library(terra)
-library(geodata)
-
 
 #SE CARGAN LOS DATOS
 
