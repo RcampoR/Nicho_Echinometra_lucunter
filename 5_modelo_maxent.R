@@ -5,6 +5,7 @@ library(rJava)
 library(dismo)
 library(raster)
 library(tmap)
+library(here)
 
 # limpiar entorno 
 rm(list = ls())
@@ -13,18 +14,18 @@ gc()
 
 # CARGAR VARIABLES
 
-pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_50m"
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
 # Cargando las 9 variables con sus nombres largo
 
-clorofila_media <- rast(file.path(pack_variables_base, "clorofila_media.tif"))
-velocidad_corriente_media <- rast(file.path(pack_variables_base, "velocidad_corriente_media.tif"))
-ph_rango <- rast(file.path(pack_variables_base, "ph_rango.tif"))
-batimetria <- rast(file.path(pack_variables_base, "batimetria.tif"))
-distancia_costa <- rast(file.path(pack_variables_base, "distancia_costa.tif"))
-concavidad <- rast(file.path(pack_variables_base, "concavidad.tif"))
-salinidad_rango <- rast(file.path(pack_variables_base, "salinidad_rango.tif"))
-temperatura_rango <- rast(file.path(pack_variables_base, "temperatura_rango.tif"))
+clorofila_media <- rast(here(pack_variables_base, "clorofila_media.tif"))
+velocidad_corriente_media <- rast(here(pack_variables_base, "velocidad_corriente_media.tif"))
+ph_rango <- rast(here(pack_variables_base, "ph_rango.tif"))
+batimetria <- rast(here(pack_variables_base, "batimetria.tif"))
+distancia_costa <- rast(here(pack_variables_base, "distancia_costa.tif"))
+concavidad <- rast(here(pack_variables_base, "concavidad.tif"))
+salinidad_rango <- rast(here(pack_variables_base, "salinidad_rango.tif"))
+temperatura_rango <- rast(here(pack_variables_base, "temperatura_rango.tif"))
 
 variables_raster <- c(
   clorofila_media,
@@ -39,7 +40,7 @@ variables_raster <- c(
 
 # CARGAR OCURRENCIA
 
-ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_Caribe.csv") %>% 
+ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
                           transmute(lon = decimalLongitude,
                                     lat = decimalLatitude) %>% 
   as.data.frame()
@@ -51,7 +52,7 @@ class(ocurrencias_E_lucunter)
 
 # CARGAR PUNTOS DE FONDO
 
-puntos_fondo_submuestreados <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\puntos_fondo\\pf_crudos_caribe_submuestreados.shp")
+puntos_fondo_submuestreados <- vect(here("..", "..", "puntos_fondo", "pf_caribe_submuestreados.shp"))
 
 puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
   dplyr::select(x, y) %>%
@@ -60,7 +61,7 @@ puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
 
 #RUTA ENMEVAL 
 
-options(ENMeval.maxent.jar = "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\maxent_software\\maxent.jar")
+options(ENMeval.maxent.jar = here("..", "..", "Proyecmaxent_software", "maxent.jar"))
 
 # ---  Realizar la evaluación y optimización con ENMeval ---
 
@@ -116,7 +117,7 @@ eval_df[eval_df$tune.args == "fc.LQ_rm.1", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
-saveRDS(eval_results, "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Modelos_Entrenados\\GENERALES\\ENMeval_TODOS_actuales_caribe.rds")
+saveRDS(eval_results, here("..", "..", "Modelos_Entrenados", "GENERALES", "ENMeval_TODOS_actuales_caribe.rds"))
 
 
 # Definir los parámetros óptimos seleccionados explícitamente
@@ -144,6 +145,9 @@ Modelo_LQ_rm_1 <- maxent(x = variables_raster,
                                   "hinge=false",     
                                   "product=false",   
                                   "threshold=false")) 
+# ver metricas
+
+Modelo_LQ_rm_1
                                                                       
 
 # PREDICCIONES
@@ -158,9 +162,11 @@ tm_shape(Raster_idoneidad) +
 
 # guardar raster_idoneidad
 
-writeRaster(Raster_idoneidad, filename = "Raster_idoneidad_caribe.tif")
+writeRaster(Raster_idoneidad, filename = here("..", "..", "MAPAS", "Raster_idoneidad_caribe.tif"))
 
 # guardar modelo final
 
-saveRDS(Modelo_LQ_rm_1, "Modelo_LQ_rm_1.rds")
+saveRDS(Modelo_LQ_rm_1, here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
 
+
+Modelo_LQ_rm_1 <- readRDS(here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))

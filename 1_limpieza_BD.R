@@ -1,8 +1,11 @@
 library(tidyverse)
+library(here)
+
+
 
 #SE CARGAN LOS DATOS
 
-Base_Original <- read.delim("E_lucunter_mundo.csv")
+Base_Original <- read.delim(here("E_lucunter_mundo.csv"))
 
 # SE EXPLORAN LOS DATOS
 
@@ -54,7 +57,7 @@ Base_Caribe %>%
 
 ### guardar tabla
 
-write.csv(Base_Caribe, "DB_E_lucunter_Caribe_limpia.csv") 
+write.csv(Base_Caribe, here("DB_E_lucunter_Caribe_limpia.csv")) 
 
 
 

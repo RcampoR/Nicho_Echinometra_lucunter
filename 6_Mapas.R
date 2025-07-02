@@ -11,13 +11,12 @@ gc()
 tmap_mode("plot")
 
 #vectores
-Colombia <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\COL_shp\\gadm36_COL_0.shp")
-Panama <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\PAN_shp\\gadm41_PAN_0.shp")
-Costa_rica <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\CRI_shp\\gadm41_CRI_0.shp")
-Nicaragua <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\NIC_shp\\gadm41_NIC_0.shp")
+Colombia <- vect(here("..", "..", "COL_shp", "gadm36_COL_0.shp"))
+Panama <- vect(here("..", "..", "PAN_shp", "gadm41_PAN_0.shp"))
+Costa_rica <- vect(here("..", "..", "CRI_shp", "gadm41_CRI_0.shp"))
+Nicaragua <- vect(here("..", "..", "NIC_shp", "gadm41_NIC_0.shp"))
 
-
-ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_Caribe.csv") %>% 
+ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
   transmute(lon = decimalLongitude,
             lat = decimalLatitude) %>% 
   vect()
@@ -26,7 +25,7 @@ crs(ocurrencias_E_lucunter) <- "EPSG:4326"
 
 #MAR CARIBE
 
-Caribe <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\Vectores_caribe\\Capa_Mar_Caribe.shp") %>% 
+Caribe <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp")) %>% 
   aggregate(dissolve = TRUE) 
 
 #FILTRADO DE PUNTOS POR FUERA DEL Caribe (el modelo nunca los tuvo en cuenta)
@@ -34,7 +33,7 @@ Caribe <- vect("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\V
 ocurrencias_E_lucunter_filtradas <- crop(ocurrencias_E_lucunter, Caribe) 
 
 #raster
-Raster_idoneidad <- rast("C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\MAPAS\\Raster_idoneidad_caribe.tif")
+Raster_idoneidad <- rast(here("..", "..", "MAPAS", "Raster_idoneidad_caribe.tif"))
 
 
 # MAPA CONTEXTO PUNTOS OCURRENCIA
@@ -104,7 +103,7 @@ print(mapa_contexto, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.25)
 
 # guardar mapa 
 dev.copy(png, 
-         filename = "mapa_distribución_caribe.png", 
+         filename = here("..", "..", "MAPAS", "mapa_distribución_caribe.png"), 
          width = 11,        
          height = 7,       
          units = "in",     # Unidades en pulgadas
@@ -161,27 +160,13 @@ print(mapa_contexto_2, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.2
 
 # guardar mapa 
 dev.copy(png, 
-         filename = "mapa_idoneidad_caribe.png", 
+         filename = here("..", "..", "MAPAS", "mapa_idoneidad_caribe.png"), 
          width = 11,       
          height = 7,       
          units = "in",     # Unidades en pulgadas
          res = 1000)   
 
 dev.off()
-
-
- # visualizar
-tmap_mode("view")
-
-# estatico
-
-tmap_mode("plot")
-
-
-
-
-
-
 
 
 

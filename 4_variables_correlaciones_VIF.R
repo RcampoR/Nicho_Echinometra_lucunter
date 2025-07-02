@@ -2,6 +2,7 @@ library(terra)
 library(tidyverse)
 library(corrplot)
 library(car)
+library(here)
 
 
 
@@ -10,7 +11,7 @@ rm(list = ls())
 gc()
 
 # Define la ruta base a la carpeta
-pack_variables_base <- "C:\\Proyecto_biologicos\\Proyectos Actuales\\Nicho_E_lucunter\\BIO_MARS_limpias_caribe_50m"
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
 # La lista completa de los nombres "limpios" que deberían ser los nombres de tus archivos .tif
 nombres_capas_completos <- c(
@@ -38,7 +39,7 @@ nombres_capas_completos <- c(
 # Cargar todas las variables usando un bucle y assign()
 # Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
 for (nombre_variable in nombres_capas_completos) {
-  ruta_archivo <- file.path(pack_variables_base, paste0(nombre_variable, ".tif"))
+  ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
   
   if (file.exists(ruta_archivo)) {
     assign(nombre_variable, rast(ruta_archivo), envir = .GlobalEnv)
@@ -50,7 +51,7 @@ for (nombre_variable in nombres_capas_completos) {
 
 
 #BASE ECHINOMETRA SUBMUESTREADA
-ocurrencias_E_lucunter <- readr::read_delim("BD_E_lucunter_submuestreado_Caribe.csv") %>% 
+ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
   transmute(lon = decimalLongitude,
             lat = decimalLatitude) %>% 
   vect()
@@ -232,5 +233,5 @@ set.seed(456)
 pf_submuestreados <- spatSample(puntos_fondo_crudos, size= 1, "random", strata=raster_pf)
 
 # guardar capa vectorial
-writeVector(puntos_fondo_crudos, "pf_crudos_caribe_submuestreados.shp")
+writeVector(pf_submuestreados, here("..", "..", "puntos_fondo", "pf_caribe_submuestreados.shp"))
 

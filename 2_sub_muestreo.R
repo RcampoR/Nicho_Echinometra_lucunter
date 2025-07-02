@@ -6,7 +6,7 @@ rm(list = ls())
 gc()
 
 # cargar Base de datos 
-Base_Caribe <- read_delim("DB_E_lucunter_Caribe_limpia.csv")
+Base_Caribe <- read_delim(here("DB_E_lucunter_Caribe_limpia.csv"))
 
 ## usaremos un vector 
 vector_1 <- vect(Base_Caribe, geom = c("longitud", "latitud"), crs = 4326)
@@ -30,10 +30,12 @@ raster_1 <- extend(raster_1, ext(raster_1)+0.01)
 
 set.seed(456)
 
+# Remuestreo de ocurrencias a solo 1 por cada 1km
+
 vector_submuestreo <- spatSample(vector_1, size= 1, "random", strata=raster_1)
 
 
 #GUARDAR COMO CSV LOS DATOS LIMPIOS
 
 as.data.frame(vector_submuestreo) %>% 
-write_csv(file = "BD_E_lucunter_submuestreado_Caribe.csv")
+write_csv(file = here("BD_E_lucunter_submuestreado_Caribe.csv"))
