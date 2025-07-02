@@ -16,29 +16,29 @@ gc()
 ruta_bio_oracle <- here("..", "..", "Variables_BIOORACLE")
 
 # Clorofila
-clorofila_media <- rast(paste0(ruta_bio_oracle, "/clorofila.nc"))
+clorofila_media <- rast(here(ruta_bio_oracle, "clorofila.nc"))
 
 # Salinidad
-salinidad_media <- rast(paste0(ruta_bio_oracle, "/salinidad_media.nc"))
-salinidad_rango <- rast(paste0(ruta_bio_oracle, "/salinidad_rango.nc"))
+salinidad_media <- rast(here(ruta_bio_oracle, "salinidad_media.nc"))
+salinidad_rango <- rast(here(ruta_bio_oracle, "salinidad_rango.nc"))
 
 # Temperatura
-temperatura_media <- rast(paste0(ruta_bio_oracle, "/temperatura_media.nc"))
-temperatura_rango <- rast(paste0(ruta_bio_oracle, "/temperatura_rango.nc"))
+temperatura_media <- rast(here(ruta_bio_oracle, "temperatura_media.nc"))
+temperatura_rango <- rast(here(ruta_bio_oracle, "temperatura_rango.nc"))
 
 # Corriente
-velocidad_corriente_media <- rast(paste0(ruta_bio_oracle, "/velocidad_corriente_media.nc"))
-direccion_corriente_media <- rast(paste0(ruta_bio_oracle, "/direccion_corriente_media.nc"))
+velocidad_corriente_media <- rast(here(ruta_bio_oracle, "velocidad_corriente_media.nc"))
+direccion_corriente_media <- rast(here(ruta_bio_oracle, "direccion_corriente_media.nc"))
 
 # Oxígeno disuelto
-oxigeno_disuelto_medio <- rast(paste0(ruta_bio_oracle, "/oxigeno_disuelto_medio.nc"))
+oxigeno_disuelto_medio <- rast(here(ruta_bio_oracle, "oxigeno_disuelto_medio.nc"))
 
 # pH
-ph_medio <- rast(paste0(ruta_bio_oracle, "/pH_medio.nc"))
-ph_rango <- rast(paste0(ruta_bio_oracle, "/pH_rango.nc"))
+ph_medio <- rast(here(ruta_bio_oracle, "pH_medio.nc"))
+ph_rango <- rast(here(ruta_bio_oracle, "pH_rango.nc"))
 
 # Productividad primaria
-productividad_primaria_media <- rast(paste0(ruta_bio_oracle, "/productividad_primaria_media.nc"))
+productividad_primaria_media <- rast(here(ruta_bio_oracle, "productividad_primaria_media.nc"))
 
 ---
   
@@ -48,30 +48,31 @@ productividad_primaria_media <- rast(paste0(ruta_bio_oracle, "/productividad_pri
   # De nuevo, subimos dos niveles para llegar a Nicho_E_lucunter y luego bajamos a MARSPEC
   ruta_marspec <- here("..", "..", "MARSPEC")
 
+## Variables de MARSPEC
+
 # Batimetría
-marspec_batimetria <- rast(paste0(ruta_marspec, "/bathymetry_30s/bathymetry_30s/bathy_30s/hdr.adf"))
+marspec_batimetria <- here(ruta_marspec, "bathymetry_30s", "bathymetry_30s", "bathy_30s", "hdr.adf") %>% rast()
 
 # Biogeo 1: Aspecto Este/Oeste (sin(aspecto en radianes))
-marspec_aspecto_este_oeste <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo01_30s/hdr.adf"))
+marspec_aspecto_este_oeste <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo01_30s", "hdr.adf") %>% rast()
 
 # Biogeo 2: Aspecto Norte/Sur (cos(aspecto en radianes))
-marspec_aspecto_norte_sur <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo02_30s/hdr.adf"))
+marspec_aspecto_norte_sur <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo02_30s", "hdr.adf") %>% rast()
 
 # Biogeo 3: Curvatura del plan
-marspec_curvatura_plan <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo03_30s/hdr.adf"))
+marspec_curvatura_plan <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo03_30s", "hdr.adf") %>% rast()
 
 # Biogeo 4: Perfil de curvatura
-marspec_perfil_curvatura <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo04_30s/hdr.adf"))
+marspec_perfil_curvatura <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo04_30s", "hdr.adf") %>% rast()
 
 # Biogeo 5: Distancia a la costa
-marspec_distancia_costa <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo05_30s/hdr.adf"))
+marspec_distancia_costa <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo05_30s", "hdr.adf") %>% rast()
 
 # Biogeo 6: Pendiente batimétrica (Slope)
-marspec_pendiente_batimetrica <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo06_30s/hdr.adf"))
+marspec_pendiente_batimetrica <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo06_30s", "hdr.adf") %>% rast()
 
 # Biogeo 7: Concavidad
-marspec_concavidad <- rast(paste0(ruta_marspec, "/biogeo01_07_30s/biogeo01_07_30s/biogeo07_30s/hdr.adf"))
-
+marspec_concavidad <- here(ruta_marspec, "biogeo01_07_30s", "biogeo01_07_30s", "biogeo07_30s", "hdr.adf") %>% rast()
 
 #CORREGIR NA en Bio-Oracle
 # Valor NA en bio-oracle

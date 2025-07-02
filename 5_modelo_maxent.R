@@ -167,6 +167,3 @@ writeRaster(Raster_idoneidad, filename = here("..", "..", "MAPAS", "Raster_idone
 # guardar modelo final
 
 saveRDS(Modelo_LQ_rm_1, here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
-
-
-Modelo_LQ_rm_1 <- readRDS(here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
