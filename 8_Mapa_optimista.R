@@ -2,6 +2,7 @@ library(terra)
 library(tmap)
 library(tidyverse)
 library(geodata)
+library(here)
 
 
 #limpiar entorno

@@ -167,3 +167,39 @@ writeRaster(Raster_idoneidad, filename = here("..", "..", "MAPAS", "Raster_idone
 # guardar modelo final
 
 saveRDS(Modelo_LQ_rm_1, here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
+
+
+# EVALUAR TSS
+
+## limpiar entorno, cargar nuevamente las variables, puntod de fondo, presencia y modelo  ##
+
+Modelo_LQ_rm_1 <- readRDS(here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
+
+#DISMO ACEPTA SOLO RASTER DE Raster
+
+variables_raster <- brick(variables_raster)
+
+
+# EVALUAR CON dismo
+
+evaluacion_LQ_1 <- evaluate(p = ocurrencias_E_lucunter,
+                            a = puntos_fondo_df,
+                            Modelo_LQ_rm_1,
+                            x = variables_raster)
+
+# 1. Obtener el TSS
+tss_valores_generales <- evaluacion_LQ_1@TPR + evaluacion_LQ_1@TNR - 1
+
+# 2. Encontrar el TSS máximo
+# Busca el valor máximo dentro del vector 'tss_valores_calculados'.
+tss_maximo <- max(tss_valores_generales)
+
+# Opción 1: Usar threshold() con un criterio que a menudo maximiza TSS
+# El criterio 'spec_sens' busca el umbral donde la suma de sensibilidad y especificidad es máxima,
+# lo que es equivalente a maximizar el TSS.
+umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_LQ_1, 'spec_sens')
+
+
+
+
+
