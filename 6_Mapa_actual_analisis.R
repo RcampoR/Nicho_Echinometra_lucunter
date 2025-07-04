@@ -176,3 +176,94 @@ dev.off()
 
 
 
+
+# MAPA BINARIO
+tm_shape(Caribe) +
+  tm_polygons(fill = "lightblue") +
+  tm_shape(Colombia) +
+  tm_fill(fill = "gray89") + 
+  tm_shape(Panama) +
+  tm_polygons(fill = "gray89") +
+  tm_shape(Costa_rica) +
+  tm_polygons(fill = "gray89") +
+  tm_shape(Nicaragua) +
+  tm_polygons(fill = "gray89") +
+  tm_shape(Raster_idoneidad) +
+  tm_raster(col.scale = tm_scale(values = c("yellow", "red4"),
+                                 breaks = c(0, 0.2426687, 1),
+                                 labels = c("No presencia", 
+                                            "Presencia")),
+            col.legend = tm_legend(title = "Probabilidad de presencia",
+                                   position = c("top", "right"))) +
+  tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
+  tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
+  tm_graticules(lines = FALSE,
+                labels.col = "gray10") +
+  tm_add_legend(title = "LEYENDA",
+                type = "polygons",
+                labels = c("Mar Caribe", "Paises area de estudio"),
+                fill = c("lightblue", "gray89"),
+                fontfamily = "sans",
+                position = c("top", "right")) +
+  tm_layout(frame = TRUE,
+            frame.lwd = 3,
+            frame.color = "gray20")
+
+
+
+
+# Definir el umbral
+umbral <- 0.2426687
+
+# Crear un raster binario: 1 si es idóneo, 0 si no
+raster_binario <- classify(Raster_idoneidad, matrix(c(-Inf, umbral, 0, umbral, Inf, 1), ncol = 3, byrow = TRUE))
+
+# Si el raster tiene un CRS proyectado (e.g., UTM), `cellSize` devolverá el área en las unidades del CRS (e.g., m^2).
+area_celda <- cellSize(Raster_idoneidad, unit = "m")
+
+# Multiplicar el raster binario por el área de la celda para obtener el área idónea de cada celda
+area_idonea_por_celda <- raster_binario * area_celda
+
+# Sumar todas las áreas de las celdas idóneas para obtener el área total
+area_total_idonea_m2 <- global(area_idonea_por_celda, "sum", na.rm = TRUE)
+
+# Convertir a kilómetros cuadrados para mayor legibilidad
+area_total_idonea_km2 <- area_total_idonea_m2 / 1e6
+
+#MAR CARIBE
+
+Caribe_por_pais <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp"))
+
+# Lista para almacenar los resultados
+resultados_area_por_pais <- list()
+
+# Obtener los nombres únicos de los países de tu SpatVector Caribe_por_pais
+# **Ajusta "NAME" por el nombre real de la columna en tu SHP que identifica el país.**
+paises_en_caribe <- unique(Caribe_por_pais$SOVEREIGN1)
+
+# Bucle para iterar sobre cada país y calcular el área
+for (pais in paises_en_caribe) {
+  cat("Calculando para:", pais, "...\n")
+  
+  # Seleccionar el polígono correspondiente al país actual
+  limite_pais <- Caribe_por_pais[Caribe_por_pais$SOVEREIGN1 == pais, ]
+  
+  # Recortar el raster de áreas idóneas a la zona marítima del país
+  raster_idonea_pais <- crop(area_idonea_por_celda, limite_pais)
+  raster_idonea_pais <- mask(raster_idonea_pais, limite_pais) # Asegura que solo se consideren las celdas dentro del límite
+  
+  # Sumar las áreas de las celdas idóneas dentro del límite del país
+  area_m2_pais <- global(raster_idonea_pais, "sum", na.rm = TRUE)
+  
+  # Convertir a kilómetros cuadrados
+  area_km2_pais <- area_m2_pais / 1e6
+  
+  # Almacenar el resultado
+  resultados_area_por_pais[[pais]] <- round(area_km2_pais$sum, 2)
+}
+
+# Imprimir los resultados para cada país
+cat("\n--- Área Idónea por País ---\n")
+for (pais in names(resultados_area_por_pais)) {
+  cat("El área idónea para", pais, "es de:", resultados_area_por_pais[[pais]], "km².\n")
+}
