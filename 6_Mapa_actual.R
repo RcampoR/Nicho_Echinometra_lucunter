@@ -136,7 +136,13 @@ tm_shape(Colombia) +
   tm_shape(Nicaragua) +
   tm_polygons(fill = "gray89") +
   tm_shape(Raster_idoneidad) +
-  tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd"),
+  tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
+                                 breaks = c(0, 0.2426687, 0.4, 0.6, 0.8, 1),
+                                 labels = c("< 0.243 (No presencia)", 
+                                            "0.243 a 0.4",
+                                            "0.4 a 0.6",
+                                            "0.6 a 0.8",
+                                            "0.8 a 1")),
             col.legend = tm_legend(title = "Probabilidad de presencia",
                                    position = c("top", "right"))) +
  tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +

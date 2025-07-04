@@ -202,4 +202,3 @@ umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_LQ_1, 'spec_sens')
 
 
 
-
