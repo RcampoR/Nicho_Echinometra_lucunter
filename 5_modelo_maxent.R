@@ -1,11 +1,11 @@
-library(terra)
-library(dplyr)
-library(ENMeval)
-library(rJava)
-library(dismo)
-library(raster)
-library(tmap)
-library(here)
+library(terra) # raster y vectores
+library(dplyr) # manipulkación de datos
+library(ENMeval) # evaluación de hiperparametros para MAXENT
+library(rJava) # Java en R, para maxent
+library(dismo) # Modelo MAXENT final
+library(raster) # Raster compatible con dismo 
+library(tmap) # Mapas tematicos
+library(here) # control de direcciones
 
 # limpiar entorno 
 rm(list = ls())
@@ -153,6 +153,8 @@ Modelo_LQ_rm_1
 # PREDICCIONES
 
 Raster_idoneidad <- predict(variables_raster, Modelo_LQ_rm_1, type = "logistic")
+
+# visualizar
 
 tmap_mode("view")
 

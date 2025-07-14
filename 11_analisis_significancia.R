@@ -1,11 +1,12 @@
-library(terra)
-library(here)
-library(betareg)
-library(rstatix)
-library(tidyverse)
-library(lmtest)
-library(emmeans)
+library(terra) # raster y vectores
+library(here) # control de direcciones
+library(betareg) # GLM de distribución beta
+library(tidyverse) # manipular datos y graficar
+library(lmtest) # analisis de LRT para dispersión homogenea
+library(emmeans) # pruebas POST-HOC 
 
+
+# LIMPIAR ENTORNO
 rm(list = ls())
 gc()
 

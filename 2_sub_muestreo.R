@@ -1,5 +1,5 @@
-library(tidyverse)
-library(terra)
+library(tidyverse) # manipular datos y graficar
+library(terra) # manejo de raster y vectores
 
 #limpiar entorno
 rm(list = ls())

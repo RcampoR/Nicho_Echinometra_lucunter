@@ -1,10 +1,10 @@
-library(terra)
-library(tidyverse)
-library(here)
-library(dismo)
-library(raster)
-library(rJava)
-library(tmap)
+library(terra) # raster y vectores
+library(tidyverse) # # manipular datos y graficar
+library(here) # control de direcciones
+library(dismo) # evaluar modelo final
+library(raster) # raster compatible con dismo
+library(rJava) # java en R
+library(tmap) # mapas tematicos 
 
 #limpiar entorno
 rm(list = ls())

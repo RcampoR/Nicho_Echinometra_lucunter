@@ -1,7 +1,8 @@
-library(terra)
-library(tmap)
-library(tidyverse)
-library(geodata)
+library(terra) # raster y vectores
+library(tmap) # mapas tematicos
+library(tidyverse) # maniulacion de datos y graficas
+library(geodata) # datos espaciales en linea
+library(here) # control de direcciones
 
 
 #limpiar entorno
