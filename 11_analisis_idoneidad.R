@@ -245,9 +245,18 @@ rm(list = ls())
 gc()
 
 
-# CARGAR MODELO GLM BETA FINAL
+#CARGAR DATOS Y MODELO GLM BETA FINAL
+
+datos_glm_tf_final <- read_csv(here("datos_glm_tf_final.csv"))
+
 Modelo_glm_beta_final <- read_rds(here("..", "..",  "Modelos_Entrenados", "ESPECIFICOS", "Modelo_glm_beta_final.rds"))
 summary(Modelo_glm_beta_final)
+
+# EXPLORAR RESIDUOS DEL MODELO FINAL
+qqnorm(residuals(Modelo_glm_beta_final, type = "quantile")) # QQ-plot de residuos
+qqline(residuals(Modelo_glm_beta_final, type = "quantile")) # Línea de referencia
+
+
 # USAR EMMEANS PARA POSHOC
 
 # Obtener las Estimated Marginal Means (EMMs)
