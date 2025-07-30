@@ -203,4 +203,6 @@ umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_LQ_1, 'spec_sens')
 
 
 
+MODELOS_GENERALES <- readRDS(here("..", "..", "Modelos_Entrenados", "GENERALES", "ENMeval_TODOS_actuales_caribe.rds"))
 
+View(MODELOS_GENERALES@results)

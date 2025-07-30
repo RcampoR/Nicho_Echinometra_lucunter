@@ -16,7 +16,7 @@ gc()
 # idoneidad
 
 Raster_idoneidad <- here("..", "..", "MAPAS", "Raster_idoneidad_caribe.tif") %>% 
-                    rast()
+  rast()
 
 # optimista
 
@@ -32,22 +32,22 @@ Raster_pesimista <- here("..", "..", "MAPAS", "Raster_pesimista_caribe.tif") %>%
 # escenarios concatenados
 
 raster_escenarios <- c(
-                       Raster_idoneidad, 
-                       Raster_optimista, 
-                       Raster_pesimista
-                       ) 
+  Raster_idoneidad, 
+  Raster_optimista, 
+  Raster_pesimista
+) 
 names(raster_escenarios) <- c(
-                              "Actual",
-                              "Optimista",
-                              "Pesimista"
-                             )  
-  
+  "Actual",
+  "Optimista",
+  "Pesimista"
+)  
+
 
 # vector caribe
 
 paises_caribe <- here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp") %>% 
-                    vect() %>% 
-                       terra::aggregate(by = "SOVEREIGN1", dissolve = TRUE) 
+  vect() %>% 
+  terra::aggregate(by = "SOVEREIGN1", dissolve = TRUE) 
 
 # extraer valores
 
@@ -99,8 +99,8 @@ TC_DATOS_glm <- datos_glm_tf %>%
   summarise(medias = mean(idoneidad_tf),
             desv_esta = sd(idoneidad_tf)) %>% 
   ungroup()
-  
-  
+
+
 
 # EXPLORANDO DATOS EXTREMOS MEDIANTE z-score 
 
@@ -115,6 +115,18 @@ datos_glm_tf %>%
   summarise(n())
 
 
+ggplot(datos_glm_tf, aes(x = pais, y = idoneidad_tf)) +
+  geom_boxplot()
+
+
+datos_glm_tf %>% 
+  group_by(pais, escenario) %>% 
+  ggplot(aes(x = idoneidad_tf)) +
+  geom_histogram(bins = 30, fill = "blue", alpha = 0.5) +
+  facet_wrap(~ pais + escenario, scales = "free") +
+  labs(title = "Distribución de Idoneidad Transformada por País y Escenario",
+       x = "Idoneidad Transformada", y = "Frecuencia") +
+  theme_minimal()
 
 # -----------------------------------------------------------------------------
 # Aplicación de los métodos del artículo (Mario Morales a, ∗, Jose Lozano b) para probar la homogeneidad de la dispersión
@@ -168,12 +180,6 @@ if (lrt_overall$`Pr(>Chisq)`[2] < 0.05) {
   message("En este caso, el modelo 'm_nulo' (con phi constante) podría ser suficiente o preferible por su simplicidad.")
 }
 
-# Analisis de residuales
-message("\n--- Análisis de Residuales del Modelo con Dispersión Variable ---")
-qqnorm(Modelo_glm_beta_con_dispersion_variable$residuals,
-       main = "QQ-Plot de Residuales Cuantílicos\n(Modelo con Dispersión Variable)")
-qqline(Modelo_glm_beta_con_dispersion_variable$residuals)
-
 
 # explorando residuos infinitos
 
@@ -186,21 +192,69 @@ idx_inf <- which(is.infinite(residuos_cuantil))
 # revisar estas filas
 datos_problema <- datos_glm_tf[idx_inf, ]
 
-datos_problema %>% 
-  select(-idoneidad) %>% 
-  view()
 
-# porcentaje de residuos infinitos
+# ELIMINAR OBSERVACIONES PROBLEMÁTICAS Y COMPARAR MODELOS
 
-(nrow(datos_problema)/nrow(datos_glm_tf))*100
 
+# Crear nuevo dataset excluyendo las filas problemáticas
+datos_glm_tf_limpio <- datos_glm_tf[-idx_inf, ]
+
+# Reajustar el modelo con los datos limpios
+
+Modelo_glm_beta_con_dispersion_variable_limpio <- betareg(idoneidad_tf ~ pais * escenario | pais + escenario, data = datos_glm_tf_limpio)
+summary(Modelo_glm_beta_con_dispersion_variable_limpio)
+
+# Verificar que ya no hay residuos infinitos
+residuos_cuantil_limpio <- residuals(Modelo_glm_beta_con_dispersion_variable_limpio, type = "quantile")
+nuevos_idx_inf <- which(is.infinite(residuos_cuantil_limpio))
+length(nuevos_idx_inf) # Cuántos son ahora
+
+# Ver qué observaciones siguen siendo problemáticas
+datos_problema_restantes <- datos_glm_tf_limpio[nuevos_idx_inf, ]
+print(datos_problema_restantes)
+
+# Crear dataset final sin estos 2 residuos infinitos
+datos_glm_tf_final <- datos_glm_tf_limpio[-nuevos_idx_inf, ]
+
+# Verificar
+cat("Observaciones eliminadas en esta segunda limpieza:", length(nuevos_idx_inf), "\n")
+cat("Observaciones finales:", nrow(datos_glm_tf_final), "\n")
+
+# Reajustar el modelo con los datos finales
+Modelo_glm_beta_final <- betareg(idoneidad_tf ~ pais * escenario | pais + escenario, 
+                                 data = datos_glm_tf_final)
+
+summary(Modelo_glm_beta_final)
+
+# Verificar que ya no hay residuos infinitos
+residuos_final <- residuals(Modelo_glm_beta_final, type = "quantile")
+infinitos_final <- which(is.infinite(residuos_final))
+cat("Residuos infinitos restantes:", length(infinitos_final), "\n")
+
+# GUARDAR MODELO GLM BETA FINAL
+
+write_rds(Modelo_glm_beta_final, 
+          here("..", "..",  "Modelos_Entrenados", "ESPECIFICOS", "Modelo_glm_beta_final.rds"))
+
+# GUARDAR BASE DE DATOS FINAL
+
+write_csv(datos_glm_tf_final, here("datos_glm_tf_final.csv"))
+
+# limpiar entorno
+rm(list = ls()) 
+gc()
+
+
+# CARGAR MODELO GLM BETA FINAL
+Modelo_glm_beta_final <- read_rds(here("..", "..",  "Modelos_Entrenados", "ESPECIFICOS", "Modelo_glm_beta_final.rds"))
+summary(Modelo_glm_beta_final)
 # USAR EMMEANS PARA POSHOC
 
 # Obtener las Estimated Marginal Means (EMMs)
 # 'pais * escenario' le dice a emmeans que calcule las medias para todas las combinaciones de estos factores
 # 'type = "response"' es CRUCIAL para obtener los resultados en la escala original de la idoneidad (0-1)
 
-emms_idoneidad <- emmeans(Modelo_glm_beta_con_dispersion_variable, specs = ~ pais * escenario, type = "response")
+emms_idoneidad <- emmeans(Modelo_glm_beta_final, specs = ~ pais * escenario, type = "response")
 
 # Convertir el objeto emmeans a un dataframe para ggplot
 df_emms <- as.data.frame(emms_idoneidad)
