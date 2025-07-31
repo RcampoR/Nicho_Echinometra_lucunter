@@ -231,6 +231,9 @@ residuos_final <- residuals(Modelo_glm_beta_final, type = "quantile")
 infinitos_final <- which(is.infinite(residuos_final))
 cat("Residuos infinitos restantes:", length(infinitos_final), "\n")
 
+# COMPARAR MODELOS
+AI
+
 # GUARDAR MODELO GLM BETA FINAL
 
 write_rds(Modelo_glm_beta_final, 
@@ -255,6 +258,8 @@ summary(Modelo_glm_beta_final)
 # EXPLORAR RESIDUOS DEL MODELO FINAL
 qqnorm(residuals(Modelo_glm_beta_final, type = "quantile")) # QQ-plot de residuos
 qqline(residuals(Modelo_glm_beta_final, type = "quantile")) # Línea de referencia
+
+
 
 
 # USAR EMMEANS PARA POSHOC
