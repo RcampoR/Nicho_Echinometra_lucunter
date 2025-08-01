@@ -83,43 +83,24 @@ hist(datos_glm_beta$idoneidad) # revisar distribución de idoneidad
 min(datos_glm_beta$idoneidad) # revisar mínimo
 max(datos_glm_beta$idoneidad) # revisar máximo
 
-# transformación de  (Smithson & Verkuilen)
 
-n <- nrow(datos_glm_beta)
+# grafico de cajas
 
-datos_glm_tf <- datos_glm_beta %>% 
-  mutate(idoneidad_tf = (idoneidad * (n - 1) + 0.5) / n) 
+ggplot(datos_glm_beta, aes(x = pais, y = idoneidad, fill = escenario)) +
+  geom_boxplot(alpha = 0.8, outlier.shape = 21, outlier.fill = "white", 
+               outlier.stroke = 0.5, linewidth = 0.5) +
+  labs(
+    x = "País", 
+    y = "Idoneidad de Habitat",
+    fill = "Escenario"
+  ) +
+  scale_x_discrete(labels = c("Colombia", "Costa Rica", "Nicaragua", "Panamá")) +
+  scale_fill_manual(values = c("#2E86AB", "#A23B72", "#F18F01", "#C73E1D"),
+                    labels = c("Actual", "SSP1-1.9", "SSP5-8.5")) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        text = element_text(family = "sans"))
 
-# pixeles por pais, (hay más para nicaragua)
-datos_glm_tf %>% 
-  group_by(pais, escenario) %>% 
-  summarise(n())
-
-# Medidas de tendencia central
-
-TC_DATOS_glm <- datos_glm_tf %>% 
-  group_by(pais, escenario) %>% 
-  summarise(medias = mean(idoneidad_tf),
-            desv_esta = sd(idoneidad_tf)) %>% 
-  ungroup()
-
-
-
-# EXPLORANDO DATOS EXTREMOS MEDIANTE z-score 
-
-datos_glm_tf %>% 
-  select(-idoneidad) %>% 
-  group_by(pais, escenario) %>% 
-  mutate(z_score = (idoneidad_tf - mean(idoneidad_tf))/sd(idoneidad_tf),
-         clasificacion = case_when(abs(z_score) > 3 ~ "Muy inusual",
-                                   abs(z_score) > 2 ~ "inusual",
-                                   TRUE ~ "NORMAL")) %>% 
-  group_by(clasificacion) %>% 
-  summarise(n())
-
-
-ggplot(datos_glm_tf, aes(x = pais, y = idoneidad_tf)) +
-  geom_boxplot()
 
 
 # -----------------------------------------------------------------------------
@@ -127,22 +108,22 @@ ggplot(datos_glm_tf, aes(x = pais, y = idoneidad_tf)) +
 # -----------------------------------------------------------------------------
 
 # m_nulo: Modelo con dispersión homogénea (phi constante)
-m_nulo <- betareg(idoneidad_tf ~ pais * escenario, data = datos_glm_tf)
+m_nulo <- betareg(idoneidad ~ pais * escenario, data = datos_glm_beta)
 message("Resumen del Modelo Nulo (Dispersión Homogénea):")
 summary(m_nulo)
 
 # m_alt1: Modelo con dispersión que varía por 'pais'
-m_alt1 <- betareg(idoneidad_tf ~ pais * escenario | pais, data = datos_glm_tf)
+m_alt1 <- betareg(idoneidad ~ pais * escenario | pais, data = datos_glm_beta)
 message("\nResumen del Modelo Alternativo 1 (Dispersión por País):")
 summary(m_alt1)
 
 # m_alt2: Modelo con dispersión que varía por 'escenario'
-m_alt2 <- betareg(idoneidad_tf ~ pais * escenario | escenario, data = datos_glm_tf)
+m_alt2 <- betareg(idoneidad ~ pais * escenario | escenario, data = datos_glm_beta)
 message("\nResumen del Modelo Alternativo 2 (Dispersión por Escenario):")
 summary(m_alt2)
 
 # Modelo con dispersión que varía por 'pais' Y 'escenario' (más general)
-Modelo_glm_beta_con_dispersion_variable <- betareg(idoneidad_tf ~ pais * escenario | pais + escenario, data = datos_glm_tf)
+Modelo_glm_beta_con_dispersion_variable <- betareg(idoneidad ~ pais * escenario | pais + escenario, data = datos_glm_beta)
 message("\nResumen del Modelo Alternativo General (Dispersión por País y Escenario):")
 summary(Modelo_glm_beta_con_dispersion_variable)
 
@@ -175,112 +156,26 @@ if (lrt_overall$`Pr(>Chisq)`[2] < 0.05) {
 }
 
 
-# explorando residuos infinitos
-
-residuos_cuantil <- residuals(Modelo_glm_beta_con_dispersion_variable, type = "quantile")
-
-# filas con infinitos
-idx_inf <- which(is.infinite(residuos_cuantil))
 
 
-# revisar estas filas
-datos_problema <- datos_glm_tf[idx_inf, ]
+# GLM beta final (variable de dispersión por país y escenario)
+
+modelo_glm_beta <- betareg(idoneidad ~ escenario * pais | escenario + pais, 
+                            data = datos_glm_beta, 
+                            link = "logit")
+summary(modelo_glm_beta)
 
 
-# ELIMINAR OBSERVACIONES PROBLEMÁTICAS Y COMPARAR MODELOS
-
-
-# Crear nuevo dataset excluyendo las filas problemáticas
-datos_glm_tf_limpio <- datos_glm_tf[-idx_inf, ]
-
-# Reajustar el modelo con los datos limpios
-
-Modelo_glm_beta_con_dispersion_variable_limpio <- betareg(idoneidad_tf ~ pais * escenario | pais + escenario, data = datos_glm_tf_limpio)
-summary(Modelo_glm_beta_con_dispersion_variable_limpio)
-
-# Verificar que ya no hay residuos infinitos
-residuos_cuantil_limpio <- residuals(Modelo_glm_beta_con_dispersion_variable_limpio, type = "quantile")
-nuevos_idx_inf <- which(is.infinite(residuos_cuantil_limpio))
-length(nuevos_idx_inf) # Cuántos son ahora
-
-# Ver qué observaciones siguen siendo problemáticas
-datos_problema_restantes <- datos_glm_tf_limpio[nuevos_idx_inf, ]
-print(datos_problema_restantes)
-
-# Crear dataset final sin estos 2 residuos infinitos
-datos_glm_tf_final <- datos_glm_tf_limpio[-nuevos_idx_inf, ]
-
-# Verificar
-cat("Observaciones eliminadas en esta segunda limpieza:", length(nuevos_idx_inf), "\n")
-cat("Observaciones finales:", nrow(datos_glm_tf_final), "\n")
-
-# Reajustar el modelo con los datos finales
-Modelo_glm_beta_final <- betareg(idoneidad_tf ~ pais * escenario | pais + escenario, 
-                                 data = datos_glm_tf_final)
-
-summary(Modelo_glm_beta_final)
-
-# Verificar que ya no hay residuos infinitos
-residuos_final <- residuals(Modelo_glm_beta_final, type = "quantile")
-infinitos_final <- which(is.infinite(residuos_final))
-cat("Residuos infinitos restantes:", length(infinitos_final), "\n")
-
-# COMPARAR MODELOS
-AI
-
-# GUARDAR MODELO GLM BETA FINAL
-
-write_rds(Modelo_glm_beta_final, 
-          here("..", "..",  "Modelos_Entrenados", "ESPECIFICOS", "Modelo_glm_beta_final.rds"))
-
-# GUARDAR BASE DE DATOS FINAL
-
-write_csv(datos_glm_tf_final, here("datos_glm_tf_final.csv"))
-
-# limpiar entorno
-rm(list = ls()) 
-gc()
-
-
-#CARGAR DATOS Y MODELO GLM BETA FINAL
-
-datos_glm_tf_final <- read_csv(here("datos_glm_tf_final.csv"))
-
-
-# revisar distribución de idoneidad transformada
-
-hist(datos_glm_tf_final$idoneidad_tf) 
-
-# grafico de cajas
-
-ggplot(datos_glm_tf_final, aes(x = pais, y = idoneidad_tf, fill = escenario)) +
-  geom_boxplot(alpha = 0.8, outlier.shape = 21, outlier.fill = "white", 
-               outlier.stroke = 0.5, linewidth = 0.5) +
-  labs(
-    x = "País", 
-    y = "Idoneidad de Habitat",
-    fill = "Escenario"
-  ) +
-  scale_x_discrete(labels = c("Colombia", "Costa Rica", "Nicaragua", "Panamá")) +
-  scale_fill_manual(values = c("#2E86AB", "#A23B72", "#F18F01", "#C73E1D"),
-                    labels = c("Actual", "SSP1-1.9", "SSP5-8.5")) +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        text = element_text(family = "sans"))
-
-
-Modelo_glm_beta_final <- read_rds(here("..", "..",  "Modelos_Entrenados", "ESPECIFICOS", "Modelo_glm_beta_final.rds"))
-summary(Modelo_glm_beta_final)
 
 # EXPLORAR RESIDUOS DEL MODELO FINAL
-qqnorm(residuals(Modelo_glm_beta_final, type = "quantile")) # QQ-plot de residuos
-qqline(residuals(Modelo_glm_beta_final, type = "quantile")) # Línea de referencia
+qqnorm(residuals(modelo_glm_beta, type = "pearson")) # QQ-plot de residuos
+qqline(residuals(modelo_glm_beta, type = "pearson")) # Línea de referencia
 
 
 
 # EXTRAER VALORES PREDICHOS Y RESIDUOS
-valores_predichos <- fitted(Modelo_glm_beta_final)
-residuos_estandarizados <- residuals(Modelo_glm_beta_final, type = "pearson")
+valores_predichos <- fitted(modelo_glm_beta)
+residuos_estandarizados <- residuals(modelo_glm_beta, type = "pearson")
 
 # OPCIÓN 1: GRÁFICO BÁSICO CON PLOT BASE
 plot(valores_predichos, residuos_estandarizados,
@@ -299,13 +194,14 @@ abline(h = c(-2, 2), col = "orange", lty = 3, lwd = 1)
 lines(lowess(valores_predichos, residuos_estandarizados), col = "darkred", lwd = 2)
 
 
+
 # USAR EMMEANS PARA POSHOC
 
 # Obtener las Estimated Marginal Means (EMMs)
 # 'pais * escenario' le dice a emmeans que calcule las medias para todas las combinaciones de estos factores
 # 'type = "response"' es CRUCIAL para obtener los resultados en la escala original de la idoneidad (0-1)
 
-emms_idoneidad <- emmeans(Modelo_glm_beta_final, specs = ~ pais * escenario, type = "response")
+emms_idoneidad <- emmeans(modelo_glm_beta, specs = ~ pais * escenario, type = "response")
 
 # Comparar escenarios dentro de cada país
 comparaciones_escenario_por_pais_ajustadas <- pairs(emms_idoneidad, by = "pais", adjust = "tukey")
@@ -315,6 +211,12 @@ print(comparaciones_escenario_por_pais_ajustadas)
 comparaciones_pais_por_escenario_ajustadas <- pairs(emms_idoneidad, by = "escenario", adjust = "tukey")
 print(comparaciones_pais_por_escenario_ajustadas)
 
+# guardar datos utilizados en el modelo GLM beta
+
+write_csv(datos_glm_beta, 
+           here("datos_glm_beta.csv"))
 
 
-
+# guardar modelo GLM beta
+saveRDS(modelo_glm_beta, 
+        here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "modelo_glm_beta.rds"))
