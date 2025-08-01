@@ -1,5 +1,5 @@
-library(tidyverse)
-library(here)
+library(tidyverse) # manipular datos y graficar
+library(here) # control de direcciones
 
 
 

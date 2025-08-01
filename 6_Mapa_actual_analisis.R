@@ -1,7 +1,8 @@
-library(terra)
-library(tmap)
-library(tidyverse)
-library(geodata)
+library(terra) # raster y vectores
+library(tmap) # mapas tematicos
+library(tidyverse) # maniulacion de datos y graficas
+library(geodata) # datos espaciales en linea
+library(here) # control de direcciones
 
 
 #limpiar entorno
@@ -48,13 +49,13 @@ mapa_contexto <- tm_shape(mundo, xlim = c(-100, -40), ylim = c(-60, 40)) +
   tm_fill(fill = "white") + 
   tm_borders(col = "gray23", lwd = 0.5) + 
   tm_shape(Colombia) + 
-  tm_polygons(fill = "gray48") + 
+  tm_polygons(fill = "gray89") + 
   tm_shape(Panama) +
-  tm_polygons(fill = "gray48") + 
+  tm_polygons(fill = "gray89") + 
   tm_shape(Costa_rica) +
-  tm_polygons(fill = "gray48") +
+  tm_polygons(fill = "gray89") +
   tm_shape(Nicaragua) +
-  tm_polygons(fill = "gray48") +
+  tm_polygons(fill = "gray89") +
   tm_borders(col = "black", lwd = 1.2) +  
   tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") 
@@ -69,15 +70,15 @@ mapa_ocurrencias <- tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") +
   tm_shape(ocurrencias_E_lucunter_filtradas) +
   tm_dots(fill = "red",
-          size = 0.7) +
+          size = 0.5) +
   tm_shape(Colombia) +
-  tm_polygons(fill = "gray48") +
+  tm_polygons(fill = "gray89") +
   tm_shape(Panama) +
-  tm_polygons(fill = "gray48") +
+  tm_polygons(fill = "gray89") +
   tm_shape(Costa_rica) +
-  tm_polygons(fill = "gray48") +
+  tm_polygons(fill = "gray89") +
   tm_shape(Nicaragua) +
-  tm_polygons(fill = "gray48") +
+  tm_polygons(fill = "gray89") +
   tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
   tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
   tm_graticules(lines = FALSE,
@@ -86,7 +87,7 @@ mapa_ocurrencias <- tm_shape(Caribe) +
                 type = "polygons",
                 labels = c("Mar Caribe", "Paises area de estudio", 
                            expression("Puntos de Ocurrencia " * italic("Echinometra lucunter"))),
-                fill = c("lightblue", "gray48", "red"),
+                fill = c("lightblue", "gray89", "red"),
                 fontfamily = "sans",
                 position = c("top", "right")) +
   tm_layout(frame = TRUE,
@@ -112,16 +113,7 @@ dev.copy(png,
 dev.off()
 
 
-# MAPA CONTEXTO IDONEIDAD
 
-mapa_contexto_2 <- tm_shape(mundo, xlim = c(-100, -40), ylim = c(-60, 40)) + # Define la extensión del mapa
-  tm_fill(fill = "white") + # Rellena todos los países del mundo
-  tm_borders(col = "gray23", lwd = 0.5) + # Bordes para todos los países
-  tm_shape(Colombia) + # Añade una nueva capa solo para Colombia
-  tm_polygons(fill = "gray89") + # Rellena Colombia con un color específico (ej. verde oscuro)
-  tm_borders(col = "black", lwd = 1.2) + # Bordes más gruesos para Colombia 
-  tm_shape(Caribe) +
-  tm_polygons(fill = "lightblue")
 
 # Mapa de idoneidad de habitat 
 
@@ -162,7 +154,7 @@ tm_shape(Colombia) +
 
 # imprimir mapa_idoneidad
 print(Mapa_idoneidad)
-print(mapa_contexto_2, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.25))
+print(mapa_contexto, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.25))
 
 # guardar mapa 
 dev.copy(png, 

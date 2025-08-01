@@ -1,8 +1,8 @@
-library(terra)
-library(tidyverse)
-library(corrplot)
-library(car)
-library(here)
+library(terra) # raster y vectores
+library(tidyverse) # manipular datos y graficar
+library(corrplot) # graficas de correlación
+library(car) # algunas estadisticas
+library(here) # control de direcciones
 
 
 
@@ -216,10 +216,10 @@ puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 1000,
 
 # TRATANDO EL SESGO DE MUESTREO DEL FONDO
 
-# se crea un raster en base al vector 
+# se crea un raster con base en el vector 
 raster_pf <- rast(puntos_fondo_crudos)
 
-# se establece la resolución (se recomienda en base al home range)
+# se establece la resolución (se recomienda utilizar el home range de la especie)
 
 res(raster_pf) <- 0.009 # 1 km
 

@@ -1,6 +1,6 @@
-library(terra)
-library(tidyverse)
-library(here)
+library(terra) # raster y vectores
+library(tidyverse) # manipular datos y graficar
+library(here) # control de direcciones
 
 
 #limpiar entorno

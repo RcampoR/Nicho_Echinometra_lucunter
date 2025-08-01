@@ -1,5 +1,5 @@
-library(tidyverse)
-library(terra)
+library(tidyverse) # manipular datos y graficar
+library(terra) # manejo de raster y vectores
 
 #limpiar entorno
 rm(list = ls())
@@ -20,9 +20,9 @@ class(vector_1)
 # se crea un raster con base al vector 
 raster_1 <- rast(vector_1)
 
-# se establece la resolución (se recomienda en base al home range)
+# se establece la resolución (se recomienda con base al home range)
 
-res(raster_1) <- 0.009 # 1 km
+res(raster_1) <- 0.009 # 1 km en el ecuador,  0 minutos, 32.4 segundos de arco
 
 # se expanden las celdas 
 
