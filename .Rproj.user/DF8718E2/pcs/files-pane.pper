@@ -1,15 +1,15 @@
 {
     "sortOrder": [
         {
-            "columnIndex": 3,
-            "ascending": false
-        },
-        {
-            "columnIndex": 4,
+            "columnIndex": 2,
             "ascending": true
         },
         {
-            "columnIndex": 2,
+            "columnIndex": 3,
+            "ascending": true
+        },
+        {
+            "columnIndex": 4,
             "ascending": true
         }
     ],
