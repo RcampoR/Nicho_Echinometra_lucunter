@@ -235,3 +235,7 @@ pf_submuestreados <- spatSample(puntos_fondo_crudos, size= 1, "random", strata=r
 # guardar capa vectorial
 writeVector(pf_submuestreados, here("..", "..", "puntos_fondo", "pf_caribe_submuestreados.shp"))
 
+
+# extraer valores de variables para las ocurrencias
+
+valores_ocurrencias <- terra::extract(variables_limpias_caribe, ocurrencias_E_lucunter)

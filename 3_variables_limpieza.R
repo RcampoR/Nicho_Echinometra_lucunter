@@ -40,7 +40,6 @@ ph_rango <- rast(here(ruta_bio_oracle, "pH_rango.nc"))
 # Productividad primaria
 productividad_primaria_media <- rast(here(ruta_bio_oracle, "productividad_primaria_media.nc"))
 
----
   
   ## Variables de MARSPEC
   
@@ -218,7 +217,27 @@ plot(variables_caribe$temperatura_media)
 variables_enmascaradas_caribe <- mask(variables_caribe, area_estudio_caribe)
 plot(variables_enmascaradas_caribe)
 
-# mascara de 70 metros batimetria 
+#volver una lista, para iterar
+variables_enmascaradas_caribe <- as.list(variables_enmascaradas_caribe)
+nombres_capas <- as.list(nombres_capas)
+
+#guardar variables enmascaradas caribe
+# Crear carpeta donde guardar los archivos
+dir.create(here("..", "..", "BIO_MARS_caribe_completas"), showWarnings = FALSE)
+
+# Guardar cada raster
+for (i in seq_along(variables_enmascaradas_caribe)) {
+  writeRaster(
+    variables_enmascaradas_caribe[[i]],
+    filename = here("..", "..", "BIO_MARS_caribe_completas", paste0(nombres_capas[[i]], ".tif")), overwrite = TRUE)
+  
+  
+}
+
+
+
+
+# mascara de 50 metros batimetria 
 
 
 # mascara batimetria
@@ -293,8 +312,8 @@ dir.create(here("..", "..", "BIO_MARS_limpias_caribe_50m"), showWarnings = FALSE
 for (i in seq_along(variables_caribe)) {
   writeRaster(
     variables_caribe[[i]],
-    filename = here("..", "..", "BIO_MARS_limpias_caribe_50m"), paste0(nombres_capas[[i]], ".tif")),
-    overwrite = TRUE
+    filename = here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombres_capas[[i]], ".tif")), overwrite = TRUE)
+   
   
 }
 
