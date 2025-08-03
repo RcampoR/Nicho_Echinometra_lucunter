@@ -6,6 +6,7 @@ library(dismo) # Modelo MAXENT final
 library(raster) # Raster compatible con dismo 
 library(tmap) # Mapas tematicos
 library(here) # control de direcciones
+library(readr) # leer csv
 
 # limpiar entorno 
 rm(list = ls())
@@ -14,7 +15,7 @@ gc()
 
 # CARGAR VARIABLES
 
-pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
+pack_variables_base <- here("..", "..", "BIO_MARS_caribe_completas")
 
 # Cargando las 9 variables con sus nombres largo
 
@@ -22,8 +23,8 @@ clorofila_media <- rast(here(pack_variables_base, "clorofila_media.tif"))
 velocidad_corriente_media <- rast(here(pack_variables_base, "velocidad_corriente_media.tif"))
 ph_rango <- rast(here(pack_variables_base, "ph_rango.tif"))
 batimetria <- rast(here(pack_variables_base, "batimetria.tif"))
-distancia_costa <- rast(here(pack_variables_base, "distancia_costa.tif"))
 concavidad <- rast(here(pack_variables_base, "concavidad.tif"))
+distancia_costa <- rast(here(pack_variables_base, "distancia_costa.tif"))
 salinidad_rango <- rast(here(pack_variables_base, "salinidad_rango.tif"))
 temperatura_rango <- rast(here(pack_variables_base, "temperatura_rango.tif"))
 
@@ -31,33 +32,39 @@ variables_raster <- c(
   clorofila_media,
   velocidad_corriente_media,
   ph_rango,
-  batimetria,
   distancia_costa,
+  batimetria,
   concavidad,
   salinidad_rango,
   temperatura_rango)
 
 
+
+
+
+#cargar puntos extraidos de las variables
+
+valores_ocurrencia <- read_delim(here("valores_extraidos_E_lucunter_caribe.csv"))
+
+
+
 # CARGAR OCURRENCIA
 
 ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
-                          transmute(lon = decimalLongitude,
-                                    lat = decimalLatitude) %>% 
+  transmute(lon = decimalLongitude,
+            lat = decimalLatitude) %>% 
   as.data.frame()
 
 
-                          
+
 class(ocurrencias_E_lucunter)
 
 
 # CARGAR PUNTOS DE FONDO
 
-puntos_fondo_submuestreados <- vect(here("..", "..", "puntos_fondo", "pf_caribe_submuestreados.shp"))
+puntos_fondo_submuestreados <- read_delim(here("puntos_fondo_submuestreados.csv"))
 
-puntos_fondo_df <- as.data.frame(geom(puntos_fondo_submuestreados)) %>%
-  dplyr::select(x, y) %>%
-  dplyr::rename(lon = x, lat = y) %>% 
-  as.data.frame()
+
 
 #RUTA ENMEVAL 
 
@@ -82,7 +89,7 @@ message("\nIniciando la evaluación de hiperparámetros con ENMeval (versión 1.
 eval_results <- ENMeval::ENMevaluate(
   occs = ocurrencias_E_lucunter[, c("lon", "lat")],
   envs = variables_raster,
-  bg = puntos_fondo_df,
+  bg = puntos_fondo_submuestreados,
   # Argumentos para la optimización de hiperparámetros
   tune.args = list(fc = ENMeval_FCs, rm = ENMeval_RMs),
   # Método de partición
@@ -113,84 +120,40 @@ Sys.sleep(2) # Pausa para asegurar que el mensaje sea visible
 # Convertir los resultados a un data.frame para un análisis más fácil
 eval_df <- eval_results@results
 
-eval_df[eval_df$tune.args == "fc.LQ_rm.1", ]
+eval_df[eval_df$tune.args == "fc.H_rm.4", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
-saveRDS(eval_results, here("..", "..", "Modelos_Entrenados", "GENERALES", "ENMeval_TODOS_actuales_caribe.rds"))
+saveRDS(eval_results, here("Modelos", "ENMeval.rds"))
 
 
-# Definir los parámetros óptimos seleccionados explícitamente
-
-best_fc <- "LQ"
-best_rm <- 1
-
-#DISMO ACEPTA SOLO RASTER DE Raster
-
-variables_raster <- brick(variables_raster)
+rm(list = ls())
+# Cargar los resultados guardados de ENMeval
 
 
-# ENTRENAR MODELO FINAL fc.LQ_rm.1
+eval_results <- readRDS(here("Modelos", "ENMeval.rds"))
 
-Modelo_LQ_rm_1 <- maxent(x = variables_raster, 
-                         p = ocurrencias_E_lucunter[, c("lon", "lat")],
-                         a = puntos_fondo_df, 
-                         args = c(paste0("betamultiplier=", best_rm),
-                                  "outputformat=logistic",
-                                  "responsecurves=TRUE",
-                                  "jackknife=TRUE",
-                                  "doclamp=TRUE",
-                                  "linear=true",    
-                                  "quadratic=true", 
-                                  "hinge=false",     
-                                  "product=false",   
-                                  "threshold=false")) 
-# ver metricas
-
-Modelo_LQ_rm_1
-                                                                      
-
-# PREDICCIONES
-
-Raster_idoneidad <- predict(variables_raster, Modelo_LQ_rm_1, type = "logistic")
-
-# visualizar
-
-tmap_mode("view")
-
-tm_shape(Raster_idoneidad) +
-  tm_raster()
+# --- 7. SELECCIONAR EL MEJOR MODELO ---
+Modelo_fc.H_rm.4 <- eval_results@models[["fc.H_rm.4"]]
 
 
-# guardar raster_idoneidad
 
-writeRaster(Raster_idoneidad, filename = here("..", "..", "MAPAS", "Raster_idoneidad_caribe.tif"))
+# predecir idoneidad con el mejor modelo
 
-# guardar modelo final
-
-saveRDS(Modelo_LQ_rm_1, here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
-
-
-# EVALUAR TSS
-
-## limpiar entorno, cargar nuevamente las variables, puntod de fondo, presencia y modelo  ##
-
-Modelo_LQ_rm_1 <- readRDS(here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
-
-#DISMO ACEPTA SOLO RASTER DE Raster
-
-variables_raster <- brick(variables_raster)
-
+Raster_idoneidad <- terra::predict(variables_raster, Modelo_fc.H_rm.4, type = "logistic")
 
 # EVALUAR CON dismo
 
-evaluacion_LQ_1 <- evaluate(p = ocurrencias_E_lucunter,
-                            a = puntos_fondo_df,
-                            Modelo_LQ_rm_1,
-                            x = variables_raster)
+evaluacion_H_4 <- evaluate(p = ocurrencias_E_lucunter,
+                           a = puntos_fondo_submuestreados,
+                           Modelo_fc.H_rm.4,
+                           x = variables_raster)
+
+plot(evaluacion_H_4, "ROC")
+plot(evaluacion_H_4, "TPR")
 
 # 1. Obtener el TSS
-tss_valores_generales <- evaluacion_LQ_1@TPR + evaluacion_LQ_1@TNR - 1
+tss_valores_generales <- evaluacion_H_4@TPR + evaluacion_H_4@TNR - 1
 
 # 2. Encontrar el TSS máximo
 # Busca el valor máximo dentro del vector 'tss_valores_calculados'.
@@ -199,10 +162,28 @@ tss_maximo <- max(tss_valores_generales)
 # Opción 1: Usar threshold() con un criterio que a menudo maximiza TSS
 # El criterio 'spec_sens' busca el umbral donde la suma de sensibilidad y especificidad es máxima,
 # lo que es equivalente a maximizar el TSS.
-umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_LQ_1, 'spec_sens')
+umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_H_4, 'spec_sens')
 
 
 
-MODELOS_GENERALES <- readRDS(here("..", "..", "Modelos_Entrenados", "GENERALES", "ENMeval_TODOS_actuales_caribe.rds"))
+# visualizar
+tmap_mode("view")
 
-View(MODELOS_GENERALES@results)
+tm_shape(Raster_idoneidad) +
+  tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
+                                 breaks = c(0, 0.4482361, 0.5, 0.7, 0.9, 1),
+                                 labels = c("< 0.448 (No presencia)", 
+                                            "0.448 a 0.5",
+                                            "0.5 a 0.7",
+                                            "0.7 a 8",
+                                            "0.9 a 1")))
+
+# contribución de variables
+plot(Modelo_fc.H_rm.4) 
+
+
+
+
+# guardar el modelo final
+saveRDS(Modelo_fc.H_rm.4, here("Modelos", "SDM_maxent.rds"))
+
