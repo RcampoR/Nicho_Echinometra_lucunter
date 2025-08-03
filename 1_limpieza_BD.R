@@ -1,66 +1,85 @@
-library(tidyverse) # manipular datos y graficar
-library(here) # control de direcciones
+
+library(tmap)
+library(terra)
+library(geodata)
+library(readr)
 
 
+# revisar nuevas ocurrencias
 
-#SE CARGAN LOS DATOS
+ocurrencias_nuevas <- read_delim(here("ocurrencia_final.csv"))
 
-Base_Original <- read.delim(here("E_lucunter_mundo.csv"))
+# cargar area de estudio
 
-# SE EXPLORAN LOS DATOS
+mar_caribe <- vect(here("..", "..", "Marine_Regions", "capa_limpia.shp")) %>% 
+              aggregate(dissolve = TRUE)
 
-### reviso si hay una unica especie
-
-Base_Original %>% 
-  group_by(species) %>% 
-  summarise(n())
-
-### revisar si hay registros de presencia y ausencia en el caribe
-
-Base_Original %>% 
-  filter(countryCode %in% c("CO", "PA", "CR", "NI")) %>% 
-  group_by(occurrenceStatus) %>% 
-  summarise(n())
+crs(mar_caribe) <- "EPSG:4326"
+              
 
 
-### Eliminar coordenadas identicas, eliminar NA, eliminar irregularidades, fechas a partir del 2000...
+# explorar 
 
-
-Base_Caribe <- Base_Original %>% 
-  filter(
-    countryCode %in% c("CO", "PA", "CR", "NI") 
-     & 
-    locality != "Bahía Málaga, Isla Palma"
-    ) %>% 
-  mutate(
-    longitud = decimalLongitude,
-    latitud = decimalLatitude
-    ) %>% 
-  filter(
-    !is.na(longitud) & !is.na(latitud)
-    ) %>% 
-  distinct(
-    longitud, latitud, .keep_all = TRUE
-    ) %>% 
-  filter(
-    year >= "2000" & !is.na(year)
-    ) %>% 
-  filter(!longitud == "-74.8112" & !latitud == "9.3829")
-
-
-# revisar paises
-
-Base_Caribe %>% 
+ocurrencias_nuevas %>% 
   group_by(countryCode) %>% 
   summarise(n())
 
 
-### guardar tabla
 
-write.csv(Base_Caribe, here("DB_E_lucunter_Caribe_limpia.csv")) 
+#explorar ocurrencias en un mapa
+
+tmap_mode("view")
 
 
 
+tm_shape(mar_caribe) +
+  tm_polygons() +
+ocurrencias_nuevas %>% 
+  vect(geom = c("decimalLongitude", "decimalLatitude"), crs = 4326) %>% 
+  tm_shape() +
+  tm_dots(fill = "red", size = 0.5, fill.alpha = 1) +
+  tm_layout(legend.outside = FALSE) 
+
+
+# filtrado de ocurrencias repetidas 
+  
+ocurrencias_filtradas <- ocurrencias_nuevas %>% 
+  mutate(
+    longitud = decimalLongitude,
+    latitud = decimalLatitude
+  ) %>% 
+  distinct(
+    longitud, latitud, .keep_all = TRUE
+  ) 
+
+
+
+
+# filtrar ocurrencias dentro del area de estudio
+
+ocurrencias_final <- ocurrencias_filtradas %>% 
+  vect(geom = c("longitud", "latitud"), crs = 4326) %>% 
+  crop(mar_caribe)
+
+
+
+
+# revisar ocurrencias filtradas en un mapa
+
+
+tm_shape(mar_caribe) +
+  tm_polygons() +
+  tm_shape(ocurrencias_final) +
+  tm_dots(fill = "red", size = 0.5, fill_alpha = 1) +
+  tm_layout(legend.outside = FALSE) 
+
+
+
+# guardar ocurrencias nuevas filtradas
+
+ocurrencias_final %>% 
+  as.data.frame() %>% 
+write_csv(here("ocurrencias_filtradas.csv"))
 
 
 

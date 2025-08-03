@@ -211,6 +211,7 @@ print(comparaciones_escenario_por_pais_ajustadas)
 comparaciones_pais_por_escenario_ajustadas <- pairs(emms_idoneidad, by = "escenario", adjust = "tukey")
 print(comparaciones_pais_por_escenario_ajustadas)
 
+
 # guardar datos utilizados en el modelo GLM beta
 
 write_csv(datos_glm_beta, 
@@ -220,3 +221,12 @@ write_csv(datos_glm_beta,
 # guardar modelo GLM beta
 saveRDS(modelo_glm_beta, 
         here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "modelo_glm_beta.rds"))
+
+# leer datos y modelo en un entorno limpio
+
+modelo_glm_beta <- readRDS(here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "modelo_glm_beta.rds"))
+
+datos_glm_beta <- read_csv(here("datos_glm_beta.csv"))
+
+
+summary(modelo_glm_beta)

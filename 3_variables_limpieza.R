@@ -40,13 +40,13 @@ ph_rango <- rast(here(ruta_bio_oracle, "pH_rango.nc"))
 # Productividad primaria
 productividad_primaria_media <- rast(here(ruta_bio_oracle, "productividad_primaria_media.nc"))
 
----
-  
-  ## Variables de MARSPEC
-  
-  # Directorio base para las variables de MARSPEC
-  # De nuevo, subimos dos niveles para llegar a Nicho_E_lucunter y luego bajamos a MARSPEC
-  ruta_marspec <- here("..", "..", "MARSPEC")
+
+
+## Variables de MARSPEC
+
+# Directorio base para las variables de MARSPEC
+# De nuevo, subimos dos niveles para llegar a Nicho_E_lucunter y luego bajamos a MARSPEC
+ruta_marspec <- here("..", "..", "MARSPEC")
 
 ## Variables de MARSPEC
 
@@ -172,7 +172,7 @@ variables_raster <- c(
   marspec_distancia_costa,
   marspec_pendiente_batimetrica,
   marspec_concavidad
-  )
+)
 
 
 # cambiar nombres
@@ -201,12 +201,14 @@ names(variables_raster) <- nombres_capas
 
 #RECORTAR CAPAS A TAMAÑO DEL CARIBE cerca a colombia
 
-vector_caribe <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp"))
+area_estudio_caribe <- vect(here("..", "..", "Marine_Regions", "capa_limpia.shp")) %>% 
+  aggregate(dissolve = TRUE)
 
-# Unir todos los polígonos en uno solo (disolverlos)
-area_estudio_caribe <- aggregate(vector_caribe, dissolve = TRUE)
+crs(area_estudio_caribe) <- "EPSG:4326"
 
- # cortar rasters con base al vector del caribe 
+
+
+# cortar rasters con base al vector del caribe 
 
 variables_caribe <- crop(variables_raster, ext(area_estudio_caribe)+0.01)
 
@@ -218,7 +220,7 @@ plot(variables_caribe$temperatura_media)
 variables_enmascaradas_caribe <- mask(variables_caribe, area_estudio_caribe)
 plot(variables_enmascaradas_caribe)
 
-# mascara de 70 metros batimetria 
+# mascara de 50 metros batimetria 
 
 
 # mascara batimetria
@@ -288,15 +290,18 @@ nombres_capas <- as.list(nombres_capas)
 
 # Crear carpeta donde guardar los archivos
 dir.create(here("..", "..", "BIO_MARS_limpias_caribe_50m"), showWarnings = FALSE)
-
 # Guardar cada raster
 for (i in seq_along(variables_caribe)) {
   writeRaster(
     variables_caribe[[i]],
-    filename = here("..", "..", "BIO_MARS_limpias_caribe_50m"), paste0(nombres_capas[[i]], ".tif")),
+    filename = here(
+      "..",
+      "..",
+      "BIO_MARS_limpias_caribe_50m",
+      paste0(nombres_capas[[i]], ".tif")
+    ),
     overwrite = TRUE
-  
+  )
 }
-
 
 

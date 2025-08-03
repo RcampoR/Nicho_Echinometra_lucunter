@@ -52,8 +52,7 @@ for (nombre_variable in nombres_capas_completos) {
 
 #BASE ECHINOMETRA SUBMUESTREADA
 ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
-  transmute(lon = decimalLongitude,
-            lat = decimalLatitude) %>% 
+  select(lon, lat) %>% 
   vect()
 
 
@@ -111,12 +110,17 @@ correlación_df %>%
   view()
 
 
+# eliminar variables altamente correlacionadas
+# productividad primaria, salinidad media, oxigeno disuelto
+# curvatura plano, pendiente batimetrica, perfil de curvatura
+
 #VARIABLES RESTANTES
 
 variables_restantes <- list(
   clorofila_media,
   salinidad_rango,
   temperatura_rango,
+  temperatura_media,
   velocidad_corriente_media,
   direccion_corriente_media,
   ph_medio,
@@ -136,6 +140,7 @@ variables_raster_para_vif <- c(
   clorofila_media,
   salinidad_rango,
   temperatura_rango,
+  temperatura_media,
   velocidad_corriente_media,
   direccion_corriente_media,
   ph_medio,
@@ -162,7 +167,7 @@ resultados_vif <- vif(modelo_vif_sencillo)
 resultados_vif
 
 
-#ELIMINANDO VARIABLES PROBLEMATICAS VIF >= 5
+#ELIMINANDO VARIABLES PROBLEMATICAS VIF >= 5 y mantener las ecologicamente relevantes
 
 #calcular VIF  a las variables restantes
 
@@ -211,7 +216,7 @@ variables_limpias_caribe <- c(clorofila_media,
 
 #CREANDO PUNTOS DE FONDO
 set.seed(456)
-puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 1000,
+puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 770,
                                   "random", na.rm = TRUE, as.points = TRUE)
 
 # TRATANDO EL SESGO DE MUESTREO DEL FONDO
@@ -232,6 +237,24 @@ set.seed(456)
 
 pf_submuestreados <- spatSample(puntos_fondo_crudos, size= 1, "random", strata=raster_pf)
 
-# guardar capa vectorial
-writeVector(pf_submuestreados, here("..", "..", "puntos_fondo", "pf_caribe_submuestreados.shp"))
+# guardar capa vectorial PUNTOS FONDO
+writeVector(pf_submuestreados, here("..", "..", "puntos_fondo", "pf_caribe_submuestreados.shp"), 
+            overwrite = TRUE)
 
+
+# ANALISIS DE COMPONENTES PRINCIPALES
+
+# extraer valores de las variables con ocurrencias
+
+
+valores_variables <- terra::extract(variables_limpias_caribe, ocurrencias_E_lucunter)
+
+# borrar filas con NA
+
+valores_variables %>% 
+  filter(!is.na(clorofila_media) & !is.na(salinidad_rango) & 
+           !is.na(temperatura_rango) & !is.na(velocidad_corriente_media) &
+           !is.na(ph_rango) & !is.na(batimetria) & 
+           !is.na(distancia_costa) & !is.na(concavidad)) -> valores_variables_limpios
+ 
+  

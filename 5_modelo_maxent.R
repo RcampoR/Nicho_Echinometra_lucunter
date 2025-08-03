@@ -38,12 +38,10 @@ variables_raster <- c(
   temperatura_rango)
 
 
-# CARGAR OCURRENCIA
+#BASE ECHINOMETRA SUBMUESTREADA
+ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) 
 
-ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
-                          transmute(lon = decimalLongitude,
-                                    lat = decimalLatitude) %>% 
-  as.data.frame()
+
 
 
                           
@@ -113,7 +111,7 @@ Sys.sleep(2) # Pausa para asegurar que el mensaje sea visible
 # Convertir los resultados a un data.frame para un análisis más fácil
 eval_df <- eval_results@results
 
-eval_df[eval_df$tune.args == "fc.LQ_rm.1", ]
+eval_df[eval_df$tune.args == "fc.LQH_rm.3", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
@@ -122,17 +120,17 @@ saveRDS(eval_results, here("..", "..", "Modelos_Entrenados", "GENERALES", "ENMev
 
 # Definir los parámetros óptimos seleccionados explícitamente
 
-best_fc <- "LQ"
-best_rm <- 1
+best_fc <- "LQH"
+best_rm <- 3
 
 #DISMO ACEPTA SOLO RASTER DE Raster
 
-variables_raster <- brick(variables_raster)
+variables_raster <- raster::stack(variables_raster)
 
 
 # ENTRENAR MODELO FINAL fc.LQ_rm.1
 
-Modelo_LQ_rm_1 <- maxent(x = variables_raster, 
+Modelo_LQH_rm_3 <- maxent(x = variables_raster, 
                          p = ocurrencias_E_lucunter[, c("lon", "lat")],
                          a = puntos_fondo_df, 
                          args = c(paste0("betamultiplier=", best_rm),
@@ -142,7 +140,7 @@ Modelo_LQ_rm_1 <- maxent(x = variables_raster,
                                   "doclamp=TRUE",
                                   "linear=true",    
                                   "quadratic=true", 
-                                  "hinge=false",     
+                                  "hinge=true",     
                                   "product=false",   
                                   "threshold=false")) 
 # ver metricas

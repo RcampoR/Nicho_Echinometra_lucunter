@@ -1,15 +1,18 @@
 library(tidyverse) # manipular datos y graficar
 library(terra) # manejo de raster y vectores
+library(tmap) # mapas tematicos
 
 #limpiar entorno
 rm(list = ls())
 gc()
 
 # cargar Base de datos 
-Base_Caribe <- read_delim(here("DB_E_lucunter_Caribe_limpia.csv"))
+Base_Caribe <- read_delim(here("ocurrencias_filtradas.csv")) %>% 
+  mutate(lon = decimalLongitude,
+            lat = decimalLatitude)
 
 ## usaremos un vector 
-vector_1 <- vect(Base_Caribe, geom = c("longitud", "latitud"), crs = 4326)
+vector_1 <- vect(Base_Caribe, geom = c("decimalLongitude", "decimalLatitude"), crs = 4326)
 
 class(vector_1)
 
@@ -35,7 +38,16 @@ set.seed(456)
 vector_submuestreo <- spatSample(vector_1, size= 1, "random", strata=raster_1)
 
 
+# visualizar el vector submuestreado
+tmap_mode("view")
+
+tm_shape(vector_submuestreo) + 
+  tm_dots(fill = "red", size = 0.5, fill_alpha = 1)
+
+nrow(vector_submuestreo)
+
 #GUARDAR COMO CSV LOS DATOS LIMPIOS
 
 as.data.frame(vector_submuestreo) %>% 
 write_csv(file = here("BD_E_lucunter_submuestreado_Caribe.csv"))
+
