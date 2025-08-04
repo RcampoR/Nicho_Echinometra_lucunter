@@ -15,7 +15,7 @@ gc()
 
 # CARGAR VARIABLES
 
-pack_variables_base <- here("..", "..", "BIO_MARS_caribe_completas")
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
 # Cargando las 9 variables con sus nombres largo
 
@@ -38,13 +38,6 @@ variables_raster <- c(
   salinidad_rango,
   temperatura_rango)
 
-
-
-
-
-#cargar puntos extraidos de las variables
-
-valores_ocurrencia <- read_delim(here("valores_extraidos_E_lucunter_caribe.csv"))
 
 
 
@@ -120,7 +113,7 @@ Sys.sleep(2) # Pausa para asegurar que el mensaje sea visible
 # Convertir los resultados a un data.frame para un análisis más fácil
 eval_df <- eval_results@results
 
-eval_df[eval_df$tune.args == "fc.H_rm.4", ]
+eval_df[eval_df$tune.args == "fc.H_rm.3.5", ]
 
 # GUARDAR TODOS LOS MODELOS ENTRENADOS EN ENMEVALS (HIPERPARAMETROS)
 
@@ -134,26 +127,26 @@ rm(list = ls())
 eval_results <- readRDS(here("Modelos", "ENMeval.rds"))
 
 # --- 7. SELECCIONAR EL MEJOR MODELO ---
-Modelo_fc.H_rm.4 <- eval_results@models[["fc.H_rm.4"]]
+Modelo_fc.H_rm.3.5 <- eval_results@models[["fc.H_rm.3.5"]]
 
 
 
 # predecir idoneidad con el mejor modelo
 
-Raster_idoneidad <- terra::predict(variables_raster, Modelo_fc.H_rm.4, type = "logistic")
+Raster_idoneidad <- terra::predict(variables_raster, Modelo_fc.H_rm.3.5, type = "logistic")
 
 # EVALUAR CON dismo
 
-evaluacion_H_4 <- evaluate(p = ocurrencias_E_lucunter,
+evaluacion_H_3.5 <- evaluate(p = ocurrencias_E_lucunter,
                            a = puntos_fondo_submuestreados,
-                           Modelo_fc.H_rm.4,
+                           Modelo_fc.H_rm.3.5,
                            x = variables_raster)
 
-plot(evaluacion_H_4, "ROC")
-plot(evaluacion_H_4, "TPR")
+plot(evaluacion_H_3.5, "ROC")
+plot(evaluacion_H_3.5, "TPR")
 
 # 1. Obtener el TSS
-tss_valores_generales <- evaluacion_H_4@TPR + evaluacion_H_4@TNR - 1
+tss_valores_generales <- evaluacion_H_3.5@TPR + evaluacion_H_3.5@TNR - 1
 
 # 2. Encontrar el TSS máximo
 # Busca el valor máximo dentro del vector 'tss_valores_calculados'.
@@ -162,7 +155,7 @@ tss_maximo <- max(tss_valores_generales)
 # Opción 1: Usar threshold() con un criterio que a menudo maximiza TSS
 # El criterio 'spec_sens' busca el umbral donde la suma de sensibilidad y especificidad es máxima,
 # lo que es equivalente a maximizar el TSS.
-umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_H_4, 'spec_sens')
+umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_H_3.5, 'spec_sens')
 
 
 
@@ -171,19 +164,19 @@ tmap_mode("view")
 
 tm_shape(Raster_idoneidad) +
   tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
-                                 breaks = c(0, 0.4482361, 0.5, 0.7, 0.9, 1),
-                                 labels = c("< 0.448 (No presencia)", 
-                                            "0.448 a 0.5",
-                                            "0.5 a 0.7",
-                                            "0.7 a 8",
-                                            "0.9 a 1")))
+                                 breaks = c(0, 0.2830035, 0.4, 0.6, 0.8, 1),
+                                 labels = c("< 0.283 (No presencia)", 
+                                            "0.283 a 0.4",
+                                            "0.4 a 0.6",
+                                            "0.6 a 8",
+                                            "0.8 a 1")))
 
 # contribución de variables
-plot(Modelo_fc.H_rm.4) 
+plot(Modelo_fc.H_rm.3.5) 
 
 
 
 
 # guardar el modelo final
-saveRDS(Modelo_fc.H_rm.4, here("Modelos", "SDM_maxent.rds"))
+saveRDS(Modelo_fc.H_rm.3.5, here("Modelos", "SDM_maxent.rds"))
 

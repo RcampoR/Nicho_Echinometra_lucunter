@@ -16,7 +16,7 @@ rm(list = ls())  # Limpiar el entorno
 
 
 # Define la ruta base a la carpeta
-pack_variables_base <- here("..", "..", "BIO_MARS_caribe_completas")
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
 # La lista completa de los nombres "limpios" que deberían ser los nombres de tus archivos .tif
 nombres_capas_completos <- c(
@@ -33,7 +33,7 @@ nombres_capas_completos <- c(
 # Cargar todas las variables usando un bucle y assign()
 # Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
 for (nombre_variable in nombres_capas_completos) {
-  ruta_archivo <- here("..", "..", "BIO_MARS_caribe_completas", paste0(nombre_variable, ".tif"))
+  ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
   
   if (file.exists(ruta_archivo)) {
     assign(nombre_variable, rast(ruta_archivo), envir = .GlobalEnv)
@@ -59,9 +59,6 @@ datos_modelos <- read_csv(here("datos_modelos.csv"))
 #                      1. PREPARACIÓN DE LOS DATOS
 # ==============================================================================
 
-# Asume que 'datos_modelos' y 'variables_completas' están en tu entorno.
-# Si no, carga tus datos y rásteres aquí.
-
 # Convertir la columna de respuesta a factor para algunos modelos (buena práctica)
 datos_modelos$presencia_ausencia <- as.factor(datos_modelos$presencia_ausencia)
 
@@ -69,7 +66,8 @@ datos_modelos$presencia_ausencia <- as.factor(datos_modelos$presencia_ausencia)
 #                      2. VALIDACIÓN CRUZADA DE K-FOLDS
 # ==============================================================================
 
-# Definir el número de 'folds' o grupos (k=5 es un valor común)
+# Definir el número de 'folds'
+
 k_folds <- 5
 
 # Crear los grupos de validación en la tabla 'datos_modelos'
@@ -126,12 +124,20 @@ cat("Desviación Estándar del AUC:", round(auc_desviacion, 3), "\n")
 
 # Entrenar el modelo con el 100% de los datos para la predicción final
 m_glm_final <- glm(presencia_ausencia ~ ., data = datos_modelos %>% dplyr::select(-k_fold_group), family = binomial)
+summary(m_glm_final)
+
+
+# guardar el modelo final
+write_rds(m_glm_final, here("Modelos", "SDM_glm.rds"))
+
+
+
+SDM_glm <- readRDS(here("Modelos", "SDM_glm.rds"))
+
 
 # Predecir un mapa de idoneidad para todo el Caribe
-raster_idoneidad_glm <- terra::predict(variables_completas, m_glm_final, type = "response")
+raster_idoneidad_glm <- terra::predict(variables_completas, SDM_glm, type = "response")
 
-# Visualizar el mapa de idoneidad
-plot(raster_idoneidad_glm, main = "Mapa de Idoneidad GLM para E. lucunter")
 
 
 tmap_mode("view")
@@ -139,3 +145,69 @@ tmap_mode("view")
 
 tm_shape(raster_idoneidad_glm) +
   tm_raster()
+
+
+# EVALUAR MODELO FINAL
+
+predicciones_finales <- predict(SDM_glm, datos_modelos, type = "response")
+roc_obj_final <- roc(datos_modelos$presencia_ausencia, predicciones_finales)
+auc_final <- auc(roc_obj_final)
+
+
+# Obtener los datos de presencia y ausencia de tu tabla de modelado
+# 'presencia_ausencia' debe ser 1 para presencia y 0 para ausencia
+presencias <- datos_modelos$presencia_ausencia == 1
+ausencias <- datos_modelos$presencia_ausencia == 0
+
+# Obtener las predicciones para el modelo final en todos tus datos
+predicciones_finales <- predict(SDM_glm, datos_modelos, type = "response")
+
+# ==============================================================================
+#                      EVALUAR CON 'dismo::evaluate()'
+# ==============================================================================
+
+# La función 'evaluate' necesita las predicciones de los puntos de presencia
+# y de los puntos de ausencia por separado.
+eval_obj <- dismo::evaluate(p = predicciones_finales[presencias], 
+                            a = predicciones_finales[ausencias])
+
+# Obtener métricas del objeto de evaluación
+# Kappa
+kappa_max <- eval_obj@kappa
+
+# 1. Obtener el TSS
+tss_valores_generales <- eval_obj@TPR + eval_obj@TNR - 1
+
+# 2. Encontrar el TSS máximo
+# Busca el valor máximo dentro del vector 'tss_valores_calculados'.
+tss_maximo <- max(tss_valores_generales)
+
+# Opción 1: Usar threshold() con un criterio que a menudo maximiza TSS
+# El criterio 'spec_sens' busca el umbral donde la suma de sensibilidad y especificidad es máxima,
+# lo que es equivalente a maximizar el TSS.
+umbral_optimo_dismo_funcion <- dismo::threshold(eval_obj, 'spec_sens')
+
+
+max(kappa_max)
+print(tss_maximo)
+umbral_optimo_dismo_funcion
+
+
+
+# Predecir un mapa de idoneidad para todo el Caribe
+raster_idoneidad_glm <- terra::predict(variables_completas, SDM_glm, type = "response")
+
+
+
+tmap_mode("view")
+
+
+tm_shape(raster_idoneidad_glm) +
+  tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
+                                 breaks = c(0, 0.641, 0.7, 0.8, 0.9, 1),
+                                 labels = c("< 0.641 (No presencia)", 
+                                            "0.641 a 0.7",
+                                            "0.7 a 0.8",
+                                            "0.8 a 9",
+                                            "0.9 a 1")))
+

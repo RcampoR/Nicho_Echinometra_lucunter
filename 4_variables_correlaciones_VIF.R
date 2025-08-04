@@ -12,7 +12,7 @@ rm(list = ls())
 gc()
 
 # Define la ruta base a la carpeta
-pack_variables_base <- here("..", "..", "BIO_MARS_caribe_completas")
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
 # La lista completa de los nombres "limpios" que deberían ser los nombres de tus archivos .tif
 nombres_capas_completos <- c(
@@ -40,7 +40,7 @@ nombres_capas_completos <- c(
 # Cargar todas las variables usando un bucle y assign()
 # Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
 for (nombre_variable in nombres_capas_completos) {
-  ruta_archivo <- here("..", "..", "BIO_MARS_caribe_completas", paste0(nombre_variable, ".tif"))
+  ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
   
   if (file.exists(ruta_archivo)) {
     assign(nombre_variable, rast(ruta_archivo), envir = .GlobalEnv)
@@ -263,7 +263,7 @@ variables_limpias_caribe <- c(clorofila_media,
 
 #CREANDO PUNTOS DE FONDO
 set.seed(456)
-puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 610,
+puntos_fondo_crudos <- spatSample(variables_limpias_caribe, 540,
                                   "random", na.rm = TRUE, as.points = TRUE)
 
 # TRATANDO EL SESGO DE MUESTREO DEL FONDO
@@ -304,7 +304,7 @@ rm(list = ls())
 gc()
 
 # Define la ruta base a la carpeta
-pack_variables_base <- here("..", "..", "BIO_MARS_caribe_completas")
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
 # La lista completa de los nombres "limpios" que deberían ser los nombres de tus archivos .tif
 nombres_capas_completos <- c(
@@ -321,7 +321,7 @@ nombres_capas_completos <- c(
 # Cargar todas las variables usando un bucle y assign()
 # Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
 for (nombre_variable in nombres_capas_completos) {
-  ruta_archivo <- here("..", "..", "BIO_MARS_caribe_completas", paste0(nombre_variable, ".tif"))
+  ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
   
   if (file.exists(ruta_archivo)) {
     assign(nombre_variable, rast(ruta_archivo), envir = .GlobalEnv)
@@ -440,7 +440,7 @@ grupos_factor <- as.factor(grupos)
 
 grupos_renombrados <- factor(grupos, 
                              levels = c("1", "2", "3"),
-                             labels = c("Hábitat A (Zonas Costeras)", "Hábitat B (Zona Media)", "Hábitat C (Alejado de la Costa)"))
+                             labels = c("I", "II", "III"))
 
 
 # 3. Re-crear el biplot del PCA, pero esta vez coloreando los puntos por el grupo
@@ -457,21 +457,49 @@ fviz_pca_biplot(pca_ocurrencias,
                 # Etiquetas de las variables
                 repel = TRUE,
                 labelsize = 5,
-                
+              
                 # Flechas de las variables
                 col.var = "black",
                 geom.var = c("arrow", "text"),
                 arrowsize = 1,
                 xlab = paste0("PC1 (", round(summary(pca_ocurrencias)$importance[2,1]*100, 2), "%)"),
                 ylab = paste0("PC2 (", round(summary(pca_ocurrencias)$importance[2,2]*100, 2), "%)")) +
+  
+  # --- TEMA Y ESTILO PROFESIONAL ---
   theme_minimal() +
-  theme( text = element_text(family = "sans"),
-         plot.title = NULL,
-         plot.subtitle = NULL,
-         axis.title = element_text(size = 14),
-         axis.text = element_text(size = 12),
-         legend.position = "right") +
-  labs(fill = "Subgrupos")
+  theme(
+    # Configuración de texto
+    text = element_text(family = "sans"),
+    plot.title = NULL,
+    plot.subtitle = NULL,
+    
+    # Ejes y etiquetas
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12, color = "gray30"),
+    axis.line = element_line(color = "gray50", size = 0.5),
+    
+    # Leyenda
+    legend.position = "right",
+    legend.title = element_text(size = 13, face = "bold"),
+    legend.text = element_text(size = 11),
+    legend.key.size = unit(1.2, "cm"),
+    
+    # Panel y grilla
+    panel.grid.major = element_line(color = "gray90", linetype = "dashed"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    
+    # Márgenes
+    plot.margin = margin(20, 20, 20, 20)
+  ) +
+  
+  # --- ETIQUETAS FINALES ---
+  labs(
+    fill = "Subgrupos Ambientales",
+    caption = paste0("Varianza total explicada: ", 
+                     round(sum(summary(pca_ocurrencias)$importance[2,1:2]) * 100, 1), 
+                     "%")
+  )
 
 # GUARDAR PCA
 
@@ -485,7 +513,7 @@ ggsave(
 
 # --- PASO 1: Generar Pseudo-ausencias ---
 # Generaremos más puntos de los que necesitamos para poder filtrarlos
-num_pseudoausencias_deseadas <- 64
+num_pseudoausencias_deseadas <- 54
 distancia_minima_km <- 2
 
 # Usaremos un bucle para generar puntos que cumplan el criterio de distancia
