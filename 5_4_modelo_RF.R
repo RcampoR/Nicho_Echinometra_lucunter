@@ -53,8 +53,13 @@ variables_completas <- c(clorofila_media,
 
 
 
+
+
+
+
+
 # Cargar los datos de presencia/ausencia
-sdmdata <- read_csv(here("datos_modelos.csv")) %>%
+read_csv(here("datos_modelos.csv")) [ , -c(10, 11)] %>%
   rename(pb = presencia_ausencia)
 
 # El Random Forest trabaja mejor con la variable de respuesta como factor
@@ -139,6 +144,11 @@ plot(final_rf_model)
 varImpPlot(final_rf_model)
 # --- 6. EVALUACIÓN DETALLADA DEL MODELO FINAL ---
 
+# leer modelo final
+
+final_rf_model <- readRDS(here("Modelos", "SDM_RF.rds"))
+
+
 # Hacer predicciones sobre los mismos datos usados para entrenar
 pres_vals <- predict(final_rf_model, newdata = sdmdata[sdmdata$pb == 1, ], type = "prob")[, 2]
 abs_vals <- predict(final_rf_model, newdata = sdmdata[sdmdata$pb == 0, ], type = "prob")[, 2]
@@ -193,3 +203,8 @@ tm_shape(raster_idoneidad$X1) +
 
 # Guardar el modelo final
 saveRDS(final_rf_model, here("Modelos", "SDM_RF.rds"))
+
+
+# guardar raster 
+
+writeRaster(raster_idoneidad$X1, here("..", "..", "MAPAS", "r_actual_RF.tif"))

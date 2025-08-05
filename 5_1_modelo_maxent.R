@@ -126,37 +126,60 @@ rm(list = ls())
 
 eval_results <- readRDS(here("Modelos", "ENMeval.rds"))
 
+# ver k-folds
+eval_results@results.partitions[eval_results@results.partitions == "fc.H_rm.3.5", ]
+
 # --- 7. SELECCIONAR EL MEJOR MODELO ---
 Modelo_fc.H_rm.3.5 <- eval_results@models[["fc.H_rm.3.5"]]
-
 
 
 # predecir idoneidad con el mejor modelo
 
 Raster_idoneidad <- terra::predict(variables_raster, Modelo_fc.H_rm.3.5, type = "logistic")
 
-# EVALUAR CON dismo
 
-evaluacion_H_3.5 <- evaluate(p = ocurrencias_E_lucunter,
-                           a = puntos_fondo_submuestreados,
-                           Modelo_fc.H_rm.3.5,
-                           x = variables_raster)
 
-plot(evaluacion_H_3.5, "ROC")
-plot(evaluacion_H_3.5, "TPR")
+#-----------------------------------------------------------------------------------
 
-# 1. Obtener el TSS
-tss_valores_generales <- evaluacion_H_3.5@TPR + evaluacion_H_3.5@TNR - 1
+# Cargar los datos de presencia/ausencia
+sdmdata <- read_csv(here("datos_modelos.csv")) %>%
+  rename(pb = presencia_ausencia)
 
-# 2. Encontrar el TSS máximo
-# Busca el valor máximo dentro del vector 'tss_valores_calculados'.
-tss_maximo <- max(tss_valores_generales)
+# Extraer los valores del mapa de ensamble en las ubicaciones de tus puntos
+valores_predichos_maxent <- terra::extract(Raster_idoneidad,
+                                             sdmdata[, c("x", "y")]) %>% 
+  pull(2)
 
-# Opción 1: Usar threshold() con un criterio que a menudo maximiza TSS
-# El criterio 'spec_sens' busca el umbral donde la suma de sensibilidad y especificidad es máxima,
-# lo que es equivalente a maximizar el TSS.
-umbral_optimo_dismo_funcion <- dismo::threshold(evaluacion_H_3.5, 'spec_sens')
+# Separar las predicciones para presencias y ausencias
+pres_vals_maxent <- valores_predichos_maxent[sdmdata$pb == 1]
+abs_vals_maxent <- valores_predichos_maxent[sdmdata$pb == 0]
 
+eval_maxent <- pa_evaluate(p = pres_vals_maxent, a = abs_vals_maxent)
+
+# --- 3. OBTENER EL UMBRAL ÓPTIMO MAXENT ---
+
+umbral_optimo_maxent <- eval_maxent@thresholds$max_spec_sens
+
+cat("\n--- Umbral óptimo para el ensamble (max_TSS/Kappa) ---\n")
+cat("Umbral:", round(umbral_optimo_maxent, 3), "\n")
+
+cat("\n--- Evaluación del Modelo Final ---\n")
+print(eval_maxent@stats)
+print(eval_maxent@thresholds)
+
+cat("\n*** Métricas Específicas ***\n")
+cat("AUC:", round(eval_maxent@stats$auc, 3), "\n")
+cat("Kappa (máximo):", round(eval_maxent@tr_stats$kappa[which.max(eval_maxent@tr_stats$kappa)], 3), "\n")
+
+tss_values <- eval_maxent@tr_stats$TPR + eval_maxent@tr_stats$TNR - 1
+tss_max <- max(tss_values)
+cat("TSS (máximo):", round(tss_max, 3), "\n")
+
+tss_threshold <- eval_maxent@tr_stats$treshold[which.max(tss_values)]
+cat("Umbral óptimo (max_TSS):", round(tss_threshold, 3), "\n")
+
+
+# ------------------------------------------------------------------------------------------
 
 
 # visualizar
@@ -164,7 +187,7 @@ tmap_mode("view")
 
 tm_shape(Raster_idoneidad) +
   tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
-                                 breaks = c(0, 0.2830035, 0.4, 0.6, 0.8, 1),
+                                 breaks = c(0, 0.283, 0.4, 0.6, 0.8, 1),
                                  labels = c("< 0.283 (No presencia)", 
                                             "0.283 a 0.4",
                                             "0.4 a 0.6",
@@ -179,4 +202,3 @@ plot(Modelo_fc.H_rm.3.5)
 
 # guardar el modelo final
 saveRDS(Modelo_fc.H_rm.3.5, here("Modelos", "SDM_maxent.rds"))
-

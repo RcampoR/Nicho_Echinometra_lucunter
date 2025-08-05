@@ -349,7 +349,7 @@ ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Ca
 
 # extraer valores de variables para las ocurrencias
 
-valores_ocurrencias <- terra::extract(variables_completas, ocurrencias_E_lucunter)
+valores_ocurrencias <- terra::extract(variables_completas, ocurrencias_E_lucunter, xy = TRUE )
 
 # quitar ID
 
@@ -554,7 +554,7 @@ puntos_pseudoausencia_final <- puntos_pseudoausencia[1:num_pseudoausencias_desea
 
 
 # --- PASO 2: Extraer valores para las Pseudo-ausencias y limpiar ---
-valores_pseudoausencias <- terra::extract(variables_completas, puntos_pseudoausencia_final) %>%
+valores_pseudoausencias <- terra::extract(variables_completas, puntos_pseudoausencia_final, xy = TRUE) %>%
   dplyr::select(-ID) %>%
   drop_na()
 

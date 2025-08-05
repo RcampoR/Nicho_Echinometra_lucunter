@@ -51,7 +51,7 @@ variables_completas <- c(clorofila_media,
 
 
 # Cargar los datos de presencia/ausencia
-sdmdata <- read_csv(here("datos_modelos.csv")) %>%
+sdmdata <- read_csv(here("datos_modelos.csv")) [ , -c(10, 11)] %>%
   rename(pb = presencia_ausencia) 
 
 # Asegurarse de que 'pb' sea un factor
@@ -97,7 +97,8 @@ for (i in 1:k) {   set.seed(456)
                      data = train_data[, 1:9],
                      family = "binomial",
                      method = "REML",
-                     gamma = 1.4)
+                     gamma = 1.4,
+                     keep.data = TRUE) # Mantener los datos para predicciones posteriores)
   
   # --- Predecir los valores para los datos de prueba ---
   # El tipo de predicción 'response' da las probabilidades (0-1)
@@ -135,12 +136,20 @@ final_gam_model <- mgcv::gam(formula_gam_final,
                              data = sdmdata[, 1:9],
                              family = "binomial",
                              method = "REML",
-                             gamma = 1.4)
+                             gamma = 1.4,
+                             keep.data = TRUE)
 
 summary(final_gam_model)
 
 # Guardar el modelo final 
 saveRDS(final_gam_model, here("Modelos", "SDM_GAM.rds"))
+
+
+
+
+# leer el modelo final guardado (opcional)
+
+final_gam_model <- readRDS(here("Modelos", "SDM_GAM.rds"))
 
 # --- 6. EVALUACIÓN DETALLADA DEL MODELO FINAL ---
 
@@ -205,3 +214,8 @@ tm_shape(mapa_presencia) +
   tm_raster(palette = c("gray", "red"), title = "Presencia Predicha",
             labels = c("Ausencia", "Presencia")) +
   tm_layout(main.title = paste("Mapa Binario (Umbral =", round(umbral, 3), ")"))
+
+
+# guardar raster final
+
+writeRaster(raster_idoneidad, here("..", "..", "MAPAS", "r_actual_GAM.tif"))

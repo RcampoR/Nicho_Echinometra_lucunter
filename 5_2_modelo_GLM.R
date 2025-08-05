@@ -52,7 +52,8 @@ variables_completas <- c(clorofila_media,
                          distancia_costa,
                          concavidad)
 
-datos_modelos <- read_csv(here("datos_modelos.csv"))
+datos_modelos <- read_csv(here("datos_modelos.csv"))[ , -c(10, 11)]
+           
 
 
 # ==============================================================================
@@ -175,6 +176,10 @@ eval_obj <- dismo::evaluate(p = predicciones_finales[presencias],
 # Kappa
 kappa_max <- eval_obj@kappa
 
+max(kappa_max)
+
+dismo::threshold(eval_obj, stat = "kappa")
+
 # 1. Obtener el TSS
 tss_valores_generales <- eval_obj@TPR + eval_obj@TNR - 1
 
@@ -211,3 +216,8 @@ tm_shape(raster_idoneidad_glm) +
                                             "0.8 a 9",
                                             "0.9 a 1")))
 
+# guardar raster final
+
+writeRaster(raster_idoneidad_glm, 
+            filename = here("..", "..", "Mapas", "r_actual_glm.tif"), 
+            overwrite = TRUE)

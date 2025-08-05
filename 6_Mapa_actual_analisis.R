@@ -2,12 +2,171 @@ library(terra) # raster y vectores
 library(tmap) # mapas tematicos
 library(tidyverse) # maniulacion de datos y graficas
 library(geodata) # datos espaciales en linea
-library(here) # control de direcciones
-
-
+library(here)# control de direcciones
+library(randomForest)
+library(mgcv) # GAM
+library(predicts)
 #limpiar entorno
 rm(list = ls())
-gc()
+
+
+
+# CARGAR TODOS LOS MODELOS
+
+SDM_maxent <- readRDS(here("Modelos", "SDM_maxent.rds"))
+
+SDM_rf <- readRDS(here("Modelos", "SDM_RF.rds"))
+
+SDM_gam <- readRDS(here("Modelos", "SDM_GAM.rds"))
+
+SDM_glm <- readRDS(here("Modelos", "SDM_glm.rds"))
+
+
+
+evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF", "ENSAMBLE"),
+                     AUC = c(0.957, 0.9503, 0.969, 0.997, 0.98),
+                     TSS = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
+                     Kappa = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
+                     Umbral_TSS = c(0.2830035, 0.641, 0.349, 0.664, 0.564))
+
+
+
+# --- CARGA DE DATOS AMBIENTALES Y DE ESPECIES ---
+
+
+# Define la ruta base a la carpeta
+pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
+
+# La lista completa de los nombres "limpios" que deberían ser los nombres de tus archivos .tif
+nombres_capas_completos <- c(
+  "clorofila_media",
+  "salinidad_rango",
+  "temperatura_rango",
+  "velocidad_corriente_media",
+  "ph_rango",
+  "batimetria",
+  "concavidad",
+  "distancia_costa"
+)
+
+# Cargar todas las variables usando un bucle y assign()
+# Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
+for (nombre_variable in nombres_capas_completos) {
+  ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
+  
+  if (file.exists(ruta_archivo)) {
+    assign(nombre_variable, rast(ruta_archivo), envir = .GlobalEnv)
+    message(paste("Cargada:", nombre_variable))
+  } else {
+    warning(paste("Advertencia: El archivo", ruta_archivo, "no se encontró y no se cargó."))
+  }
+}
+
+variables_completas <- c(clorofila_media,
+                         salinidad_rango,
+                         temperatura_rango,
+                         velocidad_corriente_media,
+                         ph_rango,
+                         batimetria,
+                         distancia_costa,
+                         concavidad)
+
+# NORMALIZAR PESOS POR TSS
+
+pesos_normalizados <- evaluación$TSS / sum(evaluación$TSS)
+
+# PREDICCION DE LOS MODELOS
+
+raster_maxent <- terra::predict(variables_completas, SDM_maxent, type = "logistic")
+raster_glm <- terra::predict(variables_completas, SDM_glm, type = "response")
+raster_gam <- terra::predict(variables_completas, SDM_gam, type = "response")
+raster_rf <- terra::predict(variables_completas, SDM_rf, type = "prob")
+
+# Apilar todos los mapas de idoneidad en un solo objeto `SpatRaster`
+mapas_para_ensamble <- c(raster_maxent, raster_glm, raster_gam, raster_rf$X1)
+
+
+# CREAR RASTER POR PESOS
+
+raster_actual_ponderado <- terra::weighted.mean(mapas_para_ensamble, w = pesos_normalizados)
+
+
+# Cargar los datos de presencia/ausencia
+sdmdata <- read_csv(here("datos_modelos.csv")) %>%
+  rename(pb = presencia_ausencia)
+
+# El Random Forest trabaja mejor con la variable de respuesta como factor
+# (Aunque puede manejarla como numérica, para clasificación es mejor factor)
+sdmdata$pb <- as.factor(sdmdata$pb)
+
+
+
+
+# --- 1. EXTRAER LAS PREDICCIONES DEL ENSAMBLE EN LOS PUNTOS ---
+
+
+# Extraer los valores del mapa de ensamble en las ubicaciones de tus puntos
+valores_predichos_ensamble <- terra::extract(raster_actual_ponderado,
+                                             sdmdata[, c("x", "y")]) %>% 
+  pull(2)
+
+# Separar las predicciones para presencias y ausencias
+pres_vals_ensamble <- valores_predichos_ensamble[sdmdata$pb == 1]
+abs_vals_ensamble <- valores_predichos_ensamble[sdmdata$pb == 0]
+
+# Usar pa_evaluate (o dismo::evaluate) para una evaluación completa
+# Es consistente usar predicts ya que lo usaste para la mayoría de los modelos
+eval_ensamble <- pa_evaluate(p = pres_vals_ensamble, a = abs_vals_ensamble)
+
+# --- 3. OBTENER EL UMBRAL ÓPTIMO PARA EL ENSAMBLE ---
+
+# Elige la métrica que quieres optimizar (por ejemplo, max_spec_sens para TSS)
+# Ya vimos que para tus modelos, este umbral también maximiza Kappa.
+umbral_optimo_ensamble <- eval_ensamble@thresholds$max_spec_sens
+
+cat("\n--- Umbral óptimo para el ensamble (max_TSS/Kappa) ---\n")
+cat("Umbral:", round(umbral_optimo_ensamble, 3), "\n")
+
+
+
+
+
+
+cat("\n--- Evaluación del Modelo Final ---\n")
+print(eval_ensamble@stats)
+print(eval_ensamble@thresholds)
+
+cat("\n*** Métricas Específicas ***\n")
+cat("AUC:", round(eval_ensamble@stats$auc, 3), "\n")
+cat("Kappa (máximo):", round(eval_ensamble@tr_stats$kappa[which.max(eval_ensamble@tr_stats$kappa)], 3), "\n")
+
+tss_values <- eval_ensamble@tr_stats$TPR + eval_ensamble@tr_stats$TNR - 1
+tss_max <- max(tss_values)
+cat("TSS (máximo):", round(tss_max, 3), "\n")
+
+tss_threshold <- eval_ensamble@tr_stats$treshold[which.max(tss_values)]
+cat("Umbral óptimo (max_TSS):", round(tss_threshold, 3), "\n")
+
+
+tmap_mode("view")
+
+tm_shape(raster_actual_ponderado) +
+  tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
+                                 breaks = c(0, 0.564, 0.7, 0.8, 0.9, 1),
+                                 labels = c("< 0.564 (No presencia)", 
+                                            "0.564 a 0.7",
+                                            "0.7 a 0.8",
+                                            "0.8 a 9",
+                                            "0.9 a 1")))
+
+# guardar raster ponderado
+
+writeRaster(raster_actual_ponderado, 
+            here("..", "..", "MAPAS", "raster_actual_ponderado.tif"))
+
+
+
+# HACER MAPAS DE OCURRENCIA Y IDONEIDAD
 
 tmap_mode("plot")
 
@@ -17,12 +176,11 @@ Panama <- vect(here("..", "..", "PAN_shp", "gadm41_PAN_0.shp"))
 Costa_rica <- vect(here("..", "..", "CRI_shp", "gadm41_CRI_0.shp"))
 Nicaragua <- vect(here("..", "..", "NIC_shp", "gadm41_NIC_0.shp"))
 
-ocurrencias_E_lucunter <- readr::read_delim(here("BD_E_lucunter_submuestreado_Caribe.csv")) %>% 
-  transmute(lon = decimalLongitude,
-            lat = decimalLatitude) %>% 
-  vect()
+ocurrencias_E_lucunter <- read_delim(here("datos_modelos.csv")) %>% 
+                                     filter(presencia_ausencia == 1) %>%
+                                     select(x, y) %>% 
+                                     vect(geom = c("x", "y"), crs = "EPSG:4326")
 
-crs(ocurrencias_E_lucunter) <- "EPSG:4326"
 
 #MAR CARIBE
 
@@ -34,7 +192,7 @@ Caribe <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp")) %>%
 ocurrencias_E_lucunter_filtradas <- crop(ocurrencias_E_lucunter, Caribe) 
 
 #raster
-Raster_idoneidad <- rast(here("..", "..", "MAPAS", "Raster_idoneidad_caribe.tif"))
+Raster_idoneidad <- rast(here("..", "..", "MAPAS", "raster_actual_ponderado.tif"))
 
 
 # MAPA CONTEXTO PUNTOS OCURRENCIA
@@ -59,7 +217,7 @@ mapa_contexto <- tm_shape(mundo, xlim = c(-100, -40), ylim = c(-60, 40)) +
   tm_borders(col = "black", lwd = 1.2) +  
   tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") 
- 
+
 
 
 
@@ -70,7 +228,7 @@ mapa_ocurrencias <- tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") +
   tm_shape(ocurrencias_E_lucunter_filtradas) +
   tm_dots(fill = "red",
-          size = 0.5) +
+          size = 0.7) +
   tm_shape(Colombia) +
   tm_polygons(fill = "gray89") +
   tm_shape(Panama) +
@@ -95,7 +253,7 @@ mapa_ocurrencias <- tm_shape(Caribe) +
             frame.color = "gray20") 
 
 
-  
+
 
 # imprimir mapa_ocurrencias
 print(mapa_ocurrencias)
@@ -119,7 +277,7 @@ dev.off()
 
 Mapa_idoneidad <-  tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") +
-tm_shape(Colombia) +
+  tm_shape(Colombia) +
   tm_fill(fill = "gray89") + 
   tm_shape(Panama) +
   tm_polygons(fill = "gray89") +
@@ -129,28 +287,28 @@ tm_shape(Colombia) +
   tm_polygons(fill = "gray89") +
   tm_shape(Raster_idoneidad) +
   tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
-                                 breaks = c(0, 0.2426687, 0.4, 0.6, 0.8, 1),
-                                 labels = c("< 0.243 (No presencia)", 
-                                            "0.243 a 0.4",
-                                            "0.4 a 0.6",
-                                            "0.6 a 0.8",
-                                            "0.8 a 1")),
+                                 breaks = c(0, 0.564, 0.7, 0.8, 0.9, 1),
+                                 labels = c("< 0.564 (No presencia)", 
+                                            "0.564 a 0.7",
+                                            "0.7 a 0.8",
+                                            "0.8 a 9",
+                                            "0.9 a 1")),
             col.legend = tm_legend(title = "Probabilidad de presencia",
                                    position = c("top", "right"))) +
- tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
-   tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
-   tm_graticules(lines = FALSE,
-                 labels.col = "gray10") +
-   tm_add_legend(title = "LEYENDA",
-                 type = "polygons",
-                 labels = c("Mar Caribe", "Paises area de estudio"),
-                 fill = c("lightblue", "gray89"),
-                 fontfamily = "sans",
-                 position = c("top", "right")) +
-   tm_layout(frame = TRUE,
-             frame.lwd = 3,
-             frame.color = "gray20")
- 
+  tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
+  tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
+  tm_graticules(lines = FALSE,
+                labels.col = "gray10") +
+  tm_add_legend(title = "LEYENDA",
+                type = "polygons",
+                labels = c("Mar Caribe", "Paises area de estudio"),
+                fill = c("lightblue", "gray89"),
+                fontfamily = "sans",
+                position = c("top", "right")) +
+  tm_layout(frame = TRUE,
+            frame.lwd = 3,
+            frame.color = "gray20")
+
 
 # imprimir mapa_idoneidad
 print(Mapa_idoneidad)
@@ -181,8 +339,8 @@ tm_shape(Caribe) +
   tm_shape(Nicaragua) +
   tm_polygons(fill = "gray89") +
   tm_shape(Raster_idoneidad) +
-  tm_raster(col.scale = tm_scale(values = c("yellow", "red4"),
-                                 breaks = c(0, 0.2426687, 1),
+  tm_raster(col.scale = tm_scale(values = c("lightblue", "red4"),
+                                 breaks = c(0, 0.564, 1),
                                  labels = c("No presencia", 
                                             "Presencia")),
             col.legend = tm_legend(title = "Probabilidad de presencia",
@@ -205,7 +363,7 @@ tm_shape(Caribe) +
 
 
 # Definir el umbral
-umbral <- 0.2426687
+umbral <- 0.564
 
 # Crear un raster binario: 1 si es idóneo, 0 si no
 raster_binario <- classify(Raster_idoneidad, matrix(c(-Inf, umbral, 0, umbral, Inf, 1), ncol = 3, byrow = TRUE))
