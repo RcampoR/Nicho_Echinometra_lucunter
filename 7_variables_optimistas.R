@@ -1,14 +1,14 @@
 library(terra) # raster y vectores
-library(tidyverse) # # manipular datos y graficar
-library(here) # control de direcciones
-library(dismo) # evaluar modelo final
-library(raster) # raster compatible con dismo
-library(rJava) # java en R
-library(tmap) # mapas tematicos 
-
+library(tmap) # mapas tematicos
+library(tidyverse) # maniulacion de datos y graficas
+library(geodata) # datos espaciales en linea
+library(here)# control de direcciones
+library(randomForest)
+library(mgcv) # GAM
+library(predicts)
 #limpiar entorno
 rm(list = ls())
-gc()
+
 
 
 # PREPARANDO ARCHIVOS
@@ -199,68 +199,5 @@ for (i in seq_along(variables_caribe)) {
 }
 
 
-#LIMPIAR ENTORNO
-
-rm(list = ls())
-gc()
-
-
-# CARGAR LAS VARIABLES OPTIMISTAS YA PROCESADAS
-
-
-# CARGAR VARIABLES
-
-pack_variables_marspec <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
-
-# Cargando las 9 variables con sus nombres largo
-
-batimetria <- rast(here(pack_variables_marspec, "batimetria.tif"))
-distancia_costa <- rast(here(pack_variables_marspec, "distancia_costa.tif"))
-concavidad <- rast(here(pack_variables_marspec, "concavidad.tif"))
-
-
-pack_variables_bio_oracle <- here("..", "..", "BIO_MARS_limpias_caribe_50m", "variables_2040_optimistas")
-
-clorofila_media <- rast(here(pack_variables_bio_oracle, "clorofila_media_2040_optimista.tif"))
-velocidad_corriente_media <- rast(here(pack_variables_bio_oracle, "velocidad_corriente_media_2040_optimista.tif"))
-ph_rango <- rast(here(pack_variables_bio_oracle, "ph_rango_2040_optimista.tif")) 
-salinidad_rango <- rast(here(pack_variables_bio_oracle, "salinidad_rango_2040_optimista.tif"))
-temperatura_rango <- rast(here(pack_variables_bio_oracle, "temperatura_rango_2040_optimista.tif"))
-
-
-
-# concatenar variables
-variables_raster <- c(
-  clorofila_media,
-  velocidad_corriente_media,
-  ph_rango,
-  batimetria,
-  distancia_costa,
-  concavidad,
-  salinidad_rango,
-  temperatura_rango)
-
-# pasar variables a raster
-
-variables_raster <- brick(variables_raster)
-
-#llamar modelo
-
-Modelo_LQ_rm_1 <- readRDS(here("..", "..", "Modelos_Entrenados", "ESPECIFICOS", "3_Modelo_LQ_rm_1.rds"))
-
-
-# PREDICCIONES
-
-Raster_optimista <- predict(variables_raster, Modelo_LQ_rm_1, type = "logistic")
-
-tmap_mode("view")
-
-tm_shape(Raster_optimista) +
-  tm_raster()
-
-
-# guardar raster_idoneidad
-
-writeRaster(Raster_optimista, filename = here("..", "..", "MAPAS", "Raster_optimista_caribe.tif"))
 
 

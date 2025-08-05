@@ -2,12 +2,113 @@ library(terra) # raster y vectores
 library(tmap) # mapas tematicos
 library(tidyverse) # maniulacion de datos y graficas
 library(geodata) # datos espaciales en linea
-library(here) # control de direcciones
+library(here)# control de direcciones
+library(randomForest)
+library(mgcv) # GAM
+library(predicts)
+
+
+#LIMPIAR ENTORNO
+
+rm(list = ls())
+
+
+# CARGAR LAS VARIABLES OPTIMISTAS YA PROCESADAS
+
+
+# CARGAR VARIABLES
+
+pack_variables_marspec <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
+
+# Cargando las 8 variables con sus nombres largo
+
+batimetria <- rast(here(pack_variables_marspec, "batimetria.tif"))
+distancia_costa <- rast(here(pack_variables_marspec, "distancia_costa.tif"))
+concavidad <- rast(here(pack_variables_marspec, "concavidad.tif"))
+
+
+pack_variables_bio_oracle <- here("..", "..", "BIO_MARS_limpias_caribe_50m", "variables_2040_pesimistas")
+
+clorofila_media <- rast(here(pack_variables_bio_oracle, "clorofila_media_2040_pesimista.tif"))
+velocidad_corriente_media <- rast(here(pack_variables_bio_oracle, "velocidad_corriente_media_2040_pesimista.tif"))
+ph_rango <- rast(here(pack_variables_bio_oracle, "ph_rango_2040_pesimista.tif")) 
+salinidad_rango <- rast(here(pack_variables_bio_oracle, "salinidad_rango_2040_pesimista.tif"))
+temperatura_rango <- rast(here(pack_variables_bio_oracle, "temperatura_rango_2040_pesimista.tif"))
+
+
+
+# concatenar variables
+variables_raster <- c(
+  clorofila_media,
+  velocidad_corriente_media,
+  ph_rango,
+  batimetria,
+  distancia_costa,
+  concavidad,
+  salinidad_rango,
+  temperatura_rango)
+
+
+
+
+# CARGAR TODOS LOS MODELOS
+
+SDM_maxent <- readRDS(here("Modelos", "SDM_maxent.rds"))
+
+SDM_rf <- readRDS(here("Modelos", "SDM_RF.rds"))
+
+SDM_gam <- readRDS(here("Modelos", "SDM_GAM.rds"))
+
+SDM_glm <- readRDS(here("Modelos", "SDM_glm.rds"))
+
+
+
+evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF"),
+                     AUC = c(0.957, 0.9503, 0.969, 0.997),
+                     TSS = c(0.796, 0.7592593, 0.852, 0.963),
+                     Kappa = c(0.796, 0.7592593, 0.852, 0.963),
+                     Umbral_TSS = c(0.2830035, 0.641, 0.349, 0.664))
+
+# NORMALIZAR PESOS POR TSS
+
+pesos_normalizados <- evaluación$TSS / sum(evaluación$TSS)
+
+# PREDICCION DE LOS MODELOS
+
+raster_maxent <- terra::predict(variables_raster, SDM_maxent, type = "logistic")
+raster_glm <- terra::predict(variables_raster, SDM_glm, type = "response")
+raster_gam <- terra::predict(variables_raster, SDM_gam, type = "response")
+raster_rf <- terra::predict(variables_raster, SDM_rf, type = "prob")
+
+# Apilar todos los mapas de idoneidad en un solo objeto `SpatRaster`
+mapas_para_ensamble <- c(raster_maxent, raster_glm, raster_gam, raster_rf$X1)
+
+
+# CREAR RASTER POR PESOS
+
+raster_pesimista_ponderado <- terra::weighted.mean(mapas_para_ensamble, w = pesos_normalizados)
+
+
+tmap_mode("view")
+
+tm_shape(raster_pesimista_ponderado) +
+  tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
+                                 breaks = c(0, 0.564, 0.7, 0.8, 0.9, 1),
+                                 labels = c("< 0.564 (No presencia)", 
+                                            "0.564 a 0.7",
+                                            "0.7 a 0.8",
+                                            "0.8 a 9",
+                                            "0.9 a 1")))
+
+# guardar raster ponderado
+
+writeRaster(raster_pesimista_ponderado, 
+            here("..", "..", "MAPAS", "raster_pesimista_ponderado.tif"))
 
 
 #limpiar entorno
 rm(list = ls())
-gc()
+
 
 tmap_mode("plot")
 
@@ -24,10 +125,9 @@ Caribe <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp")) %>%
   aggregate(dissolve = TRUE) 
 
 
-# raster optimista
+# raster pesimista ponderado
 
-raster_pesimista <- rast(here("..", "..", "MAPAS", "Raster_pesimista_caribe.tif"))
-
+raster_pesimista_ponderado <- rast(here("..", "..", "MAPAS", "raster_pesimista_ponderado.tif"))
 
 
 
@@ -69,14 +169,14 @@ mapa_pesimista <-  tm_shape(Caribe) +
   tm_polygons(fill = "gray89") +
   tm_shape(Nicaragua) +
   tm_polygons(fill = "gray89") +
-  tm_shape(raster_pesimista) +
+  tm_shape(raster_pesimista_ponderado) +
   tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
-                                 breaks = c(0, 0.2426687, 0.4, 0.6, 0.8, 1),
-                                 labels = c("< 0.243 (No presencia)", 
-                                            "0.243 a 0.4",
-                                            "0.4 a 0.6",
-                                            "0.6 a 0.8",
-                                            "0.8 a 1")),
+                                 breaks = c(0, 0.564, 0.7, 0.8, 0.9, 1),
+                                 labels = c("< 0.564 (No presencia)", 
+                                            "0.564 a 0.7",
+                                            "0.7 a 0.8",
+                                            "0.8 a 9",
+                                            "0.9 a 1")),
             col.legend = tm_legend(title = "Probabilidad de presencia",
                                    position = c("top", "right"))) +
   tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
@@ -92,7 +192,6 @@ mapa_pesimista <-  tm_shape(Caribe) +
   tm_layout(frame = TRUE,
             frame.lwd = 3,
             frame.color = "gray20")
-
 
 # imprimir mapa_optimista
 print(mapa_pesimista)
@@ -110,13 +209,13 @@ dev.off()
 
 
 # Definir el umbral
-umbral <- 0.2426687
+umbral <- 0.564
 
 # Crear un raster binario: 1 si es idóneo, 0 si no
-raster_binario <- classify(raster_pesimista, matrix(c(-Inf, umbral, 0, umbral, Inf, 1), ncol = 3, byrow = TRUE))
+raster_binario <- classify(raster_pesimista_ponderado, matrix(c(-Inf, umbral, 0, umbral, Inf, 1), ncol = 3, byrow = TRUE))
 
 # Si el raster tiene un CRS proyectado (e.g., UTM), `cellSize` devolverá el área en las unidades del CRS (e.g., m^2).
-area_celda <- cellSize(raster_pesimista, unit = "m")
+area_celda <- cellSize(raster_pesimista_ponderado, unit = "m")
 
 # Multiplicar el raster binario por el área de la celda para obtener el área idónea de cada celda
 area_idonea_por_celda <- raster_binario * area_celda

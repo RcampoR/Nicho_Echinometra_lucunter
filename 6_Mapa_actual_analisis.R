@@ -23,11 +23,11 @@ SDM_glm <- readRDS(here("Modelos", "SDM_glm.rds"))
 
 
 
-evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF", "ENSAMBLE"),
-                     AUC = c(0.957, 0.9503, 0.969, 0.997, 0.98),
-                     TSS = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
-                     Kappa = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
-                     Umbral_TSS = c(0.2830035, 0.641, 0.349, 0.664, 0.564))
+evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF"),
+                     AUC = c(0.957, 0.9503, 0.969, 0.997),
+                     TSS = c(0.796, 0.7592593, 0.852, 0.963),
+                     Kappa = c(0.796, 0.7592593, 0.852, 0.963),
+                     Umbral_TSS = c(0.2830035, 0.641, 0.349, 0.664))
 
 
 
