@@ -145,11 +145,11 @@ summary(final_gam_model)
 saveRDS(final_gam_model, here("Modelos", "SDM_GAM.rds"))
 
 
-
-
 # leer el modelo final guardado (opcional)
 
 final_gam_model <- readRDS(here("Modelos", "SDM_GAM.rds"))
+
+
 
 # --- 6. EVALUACIÓN DETALLADA DEL MODELO FINAL ---
 

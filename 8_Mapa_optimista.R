@@ -209,6 +209,10 @@ dev.copy(png,
 
 dev.off()
 
+#MAR CARIBE
+
+Caribe_por_pais <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp"))
+
 
 # Definir el umbral
 umbral <- 0.564
@@ -228,9 +232,7 @@ area_total_idonea_m2 <- global(area_idonea_por_celda, "sum", na.rm = TRUE)
 # Convertir a kilómetros cuadrados para mayor legibilidad
 area_total_idonea_km2 <- area_total_idonea_m2 / 1e6
 
-#MAR CARIBE
 
-Caribe_por_pais <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp"))
 
 # Lista para almacenar los resultados
 resultados_area_por_pais <- list()

@@ -371,7 +371,7 @@ write_csv(valores_ocurrencias_limpios, here("valores_extraidos_E_lucunter_caribe
 
 # Realizar el PCA solo con los valores de ocurrencia
 # Es crucial usar scale = TRUE y center = TRUE para estandarizar las variables
-pca_ocurrencias <- prcomp(valores_ocurrencias_limpios, scale = TRUE, center = TRUE)
+pca_ocurrencias <- prcomp(valores_ocurrencias_limpios[, -c(9, 10)], scale = TRUE, center = TRUE)
 
 # Resumen de los resultados para ver la varianza explicada
 summary(pca_ocurrencias)
@@ -490,12 +490,12 @@ fviz_pca_biplot(pca_ocurrencias,
     panel.background = element_rect(fill = "white", color = NA),
     
     # Márgenes
-    plot.margin = margin(20, 20, 20, 20)
+    plot.margin = unit(c(20, 20, 20, 20), "pt")
   ) +
   
   # --- ETIQUETAS FINALES ---
   labs(
-    fill = "Subgrupos Ambientales",
+    fill = "Subgrupos",
     caption = paste0("Varianza total explicada: ", 
                      round(sum(summary(pca_ocurrencias)$importance[2,1:2]) * 100, 1), 
                      "%")
@@ -505,9 +505,10 @@ fviz_pca_biplot(pca_ocurrencias,
 
 ggsave(
   filename = here("..", "..", "GRAFICAS", "PCA_ocurrencias.png"),
-  width = 10, height = 8, dpi = 1000
+  width = 10, height = 6, dpi = 1000
 )
 
+dev.off()
 
 # GENERAR PUNTOS DE AUSENCIA PARA GLM, GAM Y RF
 

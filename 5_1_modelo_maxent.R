@@ -10,7 +10,7 @@ library(readr) # leer csv
 
 # limpiar entorno 
 rm(list = ls())
-gc()
+
 
 
 # CARGAR VARIABLES
@@ -120,6 +120,12 @@ eval_df[eval_df$tune.args == "fc.H_rm.3.5", ]
 saveRDS(eval_results, here("Modelos", "ENMeval.rds"))
 
 
+
+
+
+
+#----------------------------------------------------------------------------------------
+
 rm(list = ls())
 # Cargar los resultados guardados de ENMeval
 
@@ -141,6 +147,8 @@ Raster_idoneidad <- terra::predict(variables_raster, Modelo_fc.H_rm.3.5, type = 
 
 #-----------------------------------------------------------------------------------
 
+# --- 3. OBTENER EL UMBRAL ÓPTIMO MAXENT ---
+
 # Cargar los datos de presencia/ausencia
 sdmdata <- read_csv(here("datos_modelos.csv")) %>%
   rename(pb = presencia_ausencia)
@@ -155,8 +163,6 @@ pres_vals_maxent <- valores_predichos_maxent[sdmdata$pb == 1]
 abs_vals_maxent <- valores_predichos_maxent[sdmdata$pb == 0]
 
 eval_maxent <- pa_evaluate(p = pres_vals_maxent, a = abs_vals_maxent)
-
-# --- 3. OBTENER EL UMBRAL ÓPTIMO MAXENT ---
 
 umbral_optimo_maxent <- eval_maxent@thresholds$max_spec_sens
 
@@ -177,6 +183,8 @@ cat("TSS (máximo):", round(tss_max, 3), "\n")
 
 tss_threshold <- eval_maxent@tr_stats$treshold[which.max(tss_values)]
 cat("Umbral óptimo (max_TSS):", round(tss_threshold, 3), "\n")
+
+
 
 
 # ------------------------------------------------------------------------------------------

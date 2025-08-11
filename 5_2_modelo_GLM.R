@@ -164,38 +164,38 @@ ausencias <- datos_modelos$presencia_ausencia == 0
 predicciones_finales <- predict(SDM_glm, datos_modelos, type = "response")
 
 # ==============================================================================
-#                      EVALUAR CON 'dismo::evaluate()'
-# ==============================================================================
-
-# La función 'evaluate' necesita las predicciones de los puntos de presencia
-# y de los puntos de ausencia por separado.
-eval_obj <- dismo::evaluate(p = predicciones_finales[presencias], 
-                            a = predicciones_finales[ausencias])
-
-# Obtener métricas del objeto de evaluación
-# Kappa
-kappa_max <- eval_obj@kappa
-
-max(kappa_max)
-
-dismo::threshold(eval_obj, stat = "kappa")
-
-# 1. Obtener el TSS
-tss_valores_generales <- eval_obj@TPR + eval_obj@TNR - 1
-
-# 2. Encontrar el TSS máximo
-# Busca el valor máximo dentro del vector 'tss_valores_calculados'.
-tss_maximo <- max(tss_valores_generales)
-
-# Opción 1: Usar threshold() con un criterio que a menudo maximiza TSS
-# El criterio 'spec_sens' busca el umbral donde la suma de sensibilidad y especificidad es máxima,
-# lo que es equivalente a maximizar el TSS.
-umbral_optimo_dismo_funcion <- dismo::threshold(eval_obj, 'spec_sens')
 
 
-max(kappa_max)
-print(tss_maximo)
-umbral_optimo_dismo_funcion
+# --- EVALUACIÓN DETALLADA DEL MODELO FINAL ---
+
+
+rm(list = ls())
+
+sdmdata <- read_csv(here("datos_modelos.csv"))[ , -c(10, 11)] %>% 
+  rename(pb = presencia_ausencia)
+
+SDM_glm <- readRDS(here("Modelos", "SDM_glm.rds"))
+
+# Hacer predicciones sobre los mismos datos usados para entrenar
+pres_vals <- predict(SDM_glm, newdata = sdmdata[sdmdata$pb == 1, ], type = "response")
+abs_vals <- predict(SDM_glm, newdata = sdmdata[sdmdata$pb == 0, ], type = "response")
+
+# Usar pa_evaluate para una evaluación completa
+eval_final <- pa_evaluate(p = pres_vals, a = abs_vals)
+
+# Imprimir las métricas principales
+cat("\n--- Evaluación del Modelo Final ---\n")
+print(eval_final@stats)
+print(eval_final@thresholds)
+
+# Métricas específicas: AUC, Kappa, TSS y umbral óptimo
+cat("\n*** Métricas Específicas ***\n")
+cat("AUC:", round(eval_final@stats$auc, 3), "\n")
+cat("Kappa (máximo):", round(eval_final@tr_stats$kappa[which.max(eval_final@tr_stats$kappa)], 3), "\n")
+tss_values <- eval_final@tr_stats$TPR + eval_final@tr_stats$TNR - 1
+tss_max <- max(tss_values)
+cat("TSS (máximo):", round(tss_max, 3), "\n")
+cat("Umbral óptimo (max_TSS):", round(eval_final@thresholds$max_spec_sens, 3), "\n")
 
 
 

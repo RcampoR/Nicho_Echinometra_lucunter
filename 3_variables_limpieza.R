@@ -5,7 +5,7 @@ library(here) # control de direcciones
 
 #limpiar entorno
 rm(list = ls())
-gc()
+
 
 
 # PREPARANDO ARCHIVOS
