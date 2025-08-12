@@ -67,13 +67,13 @@ options(ENMeval.maxent.jar = here("..", "..", "Proyecmaxent_software", "maxent.j
 
 # Definir las combinaciones de Feature Classes (FC) y Regularization Multipliers (RM) a probar
 # Es buena práctica empezar con un rango razonable.
-# La elección de FCs puede depender de la cantidad de tus puntos de presencia.
-# Si tienes pocos datos (< 50-100), podrías mantener las FCs más simples (L, LQ, H).
-# Si tienes muchos (>200), puedes explorar más complejas (LQHPT).
+# La elección de FCs puede depender de la cantidad de los puntos de presencia.
+# pocos datos (< 50-100), se podría mantener las FCs más simples (L, LQ, H).
+# Si hay muchos (>200), se pueden explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considera tu número de puntos de presencia 
+ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considerar el número de puntos de presencia 
 
-ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # Puedes ajustar este rango
+ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # se puedeajustar este rango
 
 
 # Ejecutar ENMeval con validación cruzada espacial
@@ -99,12 +99,10 @@ eval_results <- ENMeval::ENMevaluate(
   ),
   parallel = TRUE,
   numCores = parallel::detectCores() - 1,
-  # updateProgress (o progbar) no existe en esta versión, lo quitamos
-  # quiet = FALSE # Puedes poner TRUE si quieres silenciar mensajes de la función
 )
 
 message("Evaluación de hiperparámetros completada.")
-Sys.sleep(2) # Pausa para asegurar que el mensaje sea visible
+Sys.sleep(2) 
 
 
 

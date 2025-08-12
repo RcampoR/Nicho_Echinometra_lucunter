@@ -238,7 +238,7 @@ area_total_idonea_km2 <- area_total_idonea_m2 / 1e6
 resultados_area_por_pais <- list()
 
 # Obtener los nombres únicos de los países de tu SpatVector Caribe_por_pais
-# **Ajusta "NAME" por el nombre real de la columna en tu SHP que identifica el país.**
+# **Ajusta "NAME" por el nombre real de la columna en el SHP que identifica el país.**
 paises_en_caribe <- unique(Caribe_por_pais$SOVEREIGN1)
 
 # Bucle para iterar sobre cada país y calcular el área

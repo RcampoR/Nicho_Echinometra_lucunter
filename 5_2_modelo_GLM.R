@@ -121,7 +121,7 @@ cat("Desviación Estándar del AUC:", round(auc_desviacion, 3), "\n")
 #                      3. AJUSTAR EL MODELO FINAL Y PREDECIR UN MAPA
 # ==============================================================================
 
-# Asume que 'variables_completas' ya está en tu entorno.
+# Asume que 'variables_completas' ya está en el entorno.
 
 # Entrenar el modelo con el 100% de los datos para la predicción final
 m_glm_final <- glm(presencia_ausencia ~ ., data = datos_modelos %>% dplyr::select(-k_fold_group), family = binomial)

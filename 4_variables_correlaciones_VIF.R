@@ -11,10 +11,10 @@ library(cluster)
 rm(list = ls())
 gc()
 
-# Define la ruta base a la carpeta
+# ruta base a la carpeta
 pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
 
-# La lista completa de los nombres "limpios" que deberían ser los nombres de tus archivos .tif
+# La lista completa de los nombres "limpios" 
 nombres_capas_completos <- c(
   "clorofila_media",
   "salinidad_media",
@@ -39,6 +39,7 @@ nombres_capas_completos <- c(
 
 # Cargar todas las variables usando un bucle y assign()
 # Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
+
 for (nombre_variable in nombres_capas_completos) {
   ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
   
@@ -52,10 +53,8 @@ for (nombre_variable in nombres_capas_completos) {
 
 
 
-
-
-
 #CORRELACIÓN DE CAPAS
+
 variables_raster <- c(
   clorofila_media,
   salinidad_media,

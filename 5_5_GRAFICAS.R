@@ -73,7 +73,7 @@ nombres_capas_completos <- c(
 )
 
 # Cargar todas las variables usando un bucle y assign()
-# Cada SpatRaster se creará en tu entorno global con el nombre correspondiente
+# Cada SpatRaster se creará en el entorno global con el nombre correspondiente
 for (nombre_variable in nombres_capas_completos) {
   ruta_archivo <- here("..", "..", "BIO_MARS_limpias_caribe_50m", paste0(nombre_variable, ".tif"))
   
