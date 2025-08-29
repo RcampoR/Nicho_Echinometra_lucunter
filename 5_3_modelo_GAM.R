@@ -205,6 +205,7 @@ tm_shape(raster_idoneidad) +
                                             "0.5 a 0.7",
                                             "0.7 a 0.9",
                                             "0.9 a 1")))
+
 # Visualizar el mapa binario usando el umbral óptimo (max_kappa)
 umbral <- eval_final@thresholds$max_kappa
 mapa_presencia <- ifel(raster_idoneidad >= umbral, 1, 0)
@@ -219,3 +220,18 @@ tm_shape(mapa_presencia) +
 # guardar raster final
 
 writeRaster(raster_idoneidad, here("..", "..", "MAPAS", "r_actual_GAM.tif"))
+
+
+# Obtener el umbral óptimo desde pa_evaluate
+umbral <- eval_final@thresholds$max_spec_sens
+
+# Predicciones continuas sobre los datos
+pred_cont <- predict(final_gam_model, newdata = sdmdata, type = "response")
+
+# Convertir a presencia/ausencia con el umbral
+pred_bin <- ifelse(pred_cont >= umbral, 1, 0)
+
+# Crear matriz de confusión
+conf_matrix <- table(Observado = sdmdata$pb, Predicho = pred_bin)
+print(conf_matrix)
+

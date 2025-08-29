@@ -7,6 +7,8 @@ library(raster) # Raster compatible con dismo
 library(tmap) # Mapas tematicos
 library(here) # control de direcciones
 library(readr) # leer csv
+library(predicts)
+
 
 # limpiar entorno 
 rm(list = ls())
@@ -208,3 +210,19 @@ plot(Modelo_fc.H_rm.3.5)
 
 # guardar el modelo final
 saveRDS(Modelo_fc.H_rm.3.5, here("Modelos", "SDM_maxent.rds"))
+
+
+# CREAR MATRIZ DE CONFUSIÓN DEL MODELO FINAL
+
+# Predicciones binarias con el umbral óptimo
+pred_binarias <- ifelse(valores_predichos_maxent >= umbral_optimo_maxent, 1, 0)
+
+# Crear la matriz de confusión
+conf_matrix <- table(
+  Observado = sdmdata$pb,
+  Predicho  = pred_binarias
+)
+
+print(conf_matrix)
+
+

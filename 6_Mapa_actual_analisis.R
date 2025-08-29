@@ -148,6 +148,24 @@ tss_threshold <- eval_ensamble@tr_stats$treshold[which.max(tss_values)]
 cat("Umbral óptimo (max_TSS):", round(tss_threshold, 3), "\n")
 
 
+
+# Predicciones binarias del ensamble según el umbral
+pred_bin_ensamble <- ifelse(valores_predichos_ensamble >= umbral_optimo_ensamble, 1, 0)
+
+# Crear matriz de confusión
+conf_matrix_ensamble <- table(
+  Observado = sdmdata$pb,
+  Predicho  = pred_bin_ensamble
+)
+
+print(conf_matrix_ensamble)
+
+
+
+
+
+
+
 tmap_mode("view")
 
 tm_shape(raster_actual_ponderado) +

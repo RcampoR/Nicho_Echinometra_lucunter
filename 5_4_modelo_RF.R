@@ -59,7 +59,7 @@ variables_completas <- c(clorofila_media,
 
 
 # Cargar los datos de presencia/ausencia
-read_csv(here("datos_modelos.csv")) [ , -c(10, 11)] %>%
+sdmdata <- read_csv(here("datos_modelos.csv")) [ , -c(10, 11)] %>%
   rename(pb = presencia_ausencia)
 
 # El Random Forest trabaja mejor con la variable de respuesta como factor
@@ -142,6 +142,12 @@ summary(final_rf_model)
 
 plot(final_rf_model)
 varImpPlot(final_rf_model)
+
+
+# Guardar el modelo final
+saveRDS(final_rf_model, here("Modelos", "SDM_RF.rds"))
+
+
 # --- 6. EVALUACIÓN DETALLADA DEL MODELO FINAL ---
 
 # leer modelo final
@@ -201,10 +207,23 @@ tm_shape(raster_idoneidad$X1) +
 
 
 
-# Guardar el modelo final
-saveRDS(final_rf_model, here("Modelos", "SDM_RF.rds"))
 
 
 # guardar raster 
 
 writeRaster(raster_idoneidad$X1, here("..", "..", "MAPAS", "r_actual_RF.tif"))
+
+
+# Obtener el umbral óptimo desde pa_evaluate
+umbral <- eval_final@thresholds$max_spec_sens
+
+# Predicciones continuas sobre los datos
+pred_cont <- predict(final_rf_model, newdata = sdmdata, type = "prob")[ , 2]
+
+# Convertir a presencia/ausencia con el umbral
+pred_bin <- ifelse(pred_cont >= umbral, 1, 0)
+
+# Crear matriz de confusión
+conf_matrix <- table(Observado = sdmdata$pb, Predicho = pred_bin)
+print(conf_matrix)
+

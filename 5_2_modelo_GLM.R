@@ -221,3 +221,17 @@ tm_shape(raster_idoneidad_glm) +
 writeRaster(raster_idoneidad_glm, 
             filename = here("..", "..", "Mapas", "r_actual_glm.tif"), 
             overwrite = TRUE)
+
+
+# Obtener el umbral óptimo desde pa_evaluate
+umbral <- eval_final@thresholds$max_spec_sens
+
+# Predicciones continuas sobre los datos
+pred_cont <- predict(SDM_glm, newdata = sdmdata, type = "response")
+
+# Convertir a presencia/ausencia con el umbral
+pred_bin <- ifelse(pred_cont >= umbral, 1, 0)
+
+# Crear matriz de confusión
+conf_matrix <- table(Observado = sdmdata$pb, Predicho = pred_bin)
+print(conf_matrix)
