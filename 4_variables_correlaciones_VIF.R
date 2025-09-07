@@ -9,7 +9,6 @@ library(cluster)
 
 #limpiar entorno
 rm(list = ls())
-gc()
 
 # ruta base a la carpeta
 pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
@@ -359,146 +358,94 @@ valores_ocurrencias <- valores_ocurrencias[, -1]
 valores_ocurrencias_limpios <- valores_ocurrencias %>% 
   drop_na()
 
-
-
-
-# guardar valores de ocurrencias
-
-write_csv(valores_ocurrencias_limpios, here("valores_extraidos_E_lucunter_caribe.csv"))
-
 # ANALISIS DE COMPONENTES PRINCIPALES
 
-# Realizar el PCA solo con los valores de ocurrencia
-# Es crucial usar scale = TRUE y center = TRUE para estandarizar las variables
-pca_ocurrencias <- prcomp(valores_ocurrencias_limpios[, -c(9, 10)], scale = TRUE, center = TRUE)
+# medias y desviaciones del presente para normalizar las futuras
+medias <- global(variables_completas, mean, na.rm = TRUE)
+sds    <- global(variables_completas, sd, na.rm = TRUE)
 
-# Resumen de los resultados para ver la varianza explicada
-summary(pca_ocurrencias)
+medias
+sds
+
+
+# guardar medias y desviaciones estandar
+write.csv(medias, here("medias_presente.csv"), row.names = TRUE)
+write.csv(sds, here("sds_presente.csv"), row.names = TRUE)
+
+
+# PCA de las variables seleccionadas en area de estudio
+
+pca_area_estudio <- prcomp(variables_completas, center = TRUE, scale. = TRUE)
+
+summary(pca_area_estudio)
+
+# 2. Proyectar fondo y ocurrencias al espacio PCA 
+
+fondo_proj <- as.data.frame(predict(pca_area_estudio, newdata = valores_fondo)) 
+fondo_proj$grupo <- "Fondo" 
+occs_proj <- as.data.frame(predict(pca_area_estudio, newdata = valores_ocurrencias_limpios[ , -c(9, 10)])) 
+occs_proj$grupo <- "Presencias"
+
 
 # Visualizar la varianza explicada por cada componente (gráfico de codo)
-fviz_eig(pca_ocurrencias, addlabels = TRUE, ylim = c(0, 50))
+fviz_eig(pca_area_estudio, addlabels = TRUE, ylim = c(0, 50))
 
-# Código para generar el biplot con mejoras estéticas
-fviz_pca_biplot(pca_ocurrencias,
-                
-                # Puntos de los individuos
-                geom.ind = "point",
-                pointshape = 21,
-                pointsize = 3.5,
-                fill.ind = "#768B99",  # Un gris azulado elegante
-                col.ind = "black",
-                alpha.ind = 0.8,       # Un poco de transparencia
-                
-                # Etiquetas de las variables
-                repel = TRUE,
-                labelsize = 5,
-                
-                # Flechas de las variables
-                col.var = "black",
-                geom.var = c("arrow", "text"),
-                arrowsize = 1,
-                # Etiqueta de los ejes con la varianza explicada
-                xlab = paste0("PC1 (", round(summary(pca_ocurrencias)$importance[2,1]*100, 2), "%)"),
-                ylab = paste0("PC2 (", round(summary(pca_ocurrencias)$importance[2,2]*100, 2), "%)")) +
+# --- 1. Biplot base ---
+p_biplot <- fviz_pca_biplot(
+  pca_area_estudio,
   
-  # Mejoras adicionales con ggplot2
+  # Puntos del fondo
+  geom.ind = "point",
+  pointshape = 21,
+  pointsize = 1,
+  fill.ind = "gray86",
+  col.ind = "cornflowerblue",
+  alpha.ind = 0.3,
+  
+  # Flechas y etiquetas de variables
+  repel = TRUE,
+  labelsize = 5,
+  col.var = "black",
+  geom.var = c("arrow", "text"),
+  arrowsize = 1,
+  
+  # Ejes con % de varianza
+  xlab = paste0("PC1 (", round(summary(pca_area_estudio)$importance[2,1]*100, 1), "%)"),
+  ylab = paste0("PC2 (", round(summary(pca_area_estudio)$importance[2,2]*100, 1), "%)")
+) +
   theme_classic() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 18),
-        plot.subtitle = element_text(hjust = 0.5, size = 12),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12),
-        legend.position = "none") # Generalmente no se necesita leyenda si todos los puntos son iguales
-
-
-# 1. Calcular la matriz de distancias entre los puntos de ocurrencia
-# Se usa la distancia euclidiana, que es el método por defecto y más común
-distancias <- dist(valores_ocurrencias_limpios, method = "euclidean")
-
-# 2. Realizar el análisis de clústeres jerárquicos
-# Usamos el método de "ward.D2" para minimizar la varianza dentro de cada clúster,
-# lo que tiende a producir clústeres más compactos y es muy recomendado
-cluster_jerarquico <- hclust(distancias, method = "ward.D2")
-
-# 3. Visualizar el dendrograma para ver la estructura de los clústeres
-fviz_dend(cluster_jerarquico,
-          cex = 0.6,       # Tamaño de las etiquetas
-          k = 3,           # Cortar el dendrograma en 3 clústeres (basado en el PCA)
-          k_colors = c("#2E9FDF", "#E7B800", "#FC4E07"), # Colores para los clústeres
-          rect = TRUE,     # Dibujar rectángulos alrededor de los clústeres
-          main = "Dendrograma de Clústeres de Ocurrencias",
-          xlab = "Ocurrencias",
-          ylab = "Distancia")
-
-
-# 1. Cortar el árbol de clústeres en 3 grupos
-# La función cutree() asigna un ID de clúster a cada ocurrencia
-grupos <- cutree(cluster_jerarquico, k = 3)
-
-# 2. Convertir los IDs de clúster en un factor para la visualización
-grupos_factor <- as.factor(grupos)
-
-grupos_renombrados <- factor(grupos, 
-                             levels = c("1", "2", "3"),
-                             labels = c("I", "II", "III"))
-
-
-# 3. Re-crear el biplot del PCA, pero esta vez coloreando los puntos por el grupo
-fviz_pca_biplot(pca_ocurrencias,
-                title = NULL,
-                # Puntos de los individuos
-                geom.ind = "point",
-                pointshape = 21,
-                pointsize = 3,
-                fill.ind = grupos_renombrados, # ¡Aquí usamos el factor de los clústeres para colorear!
-                col.ind = "black",
-                palette = "jco",
-                
-                # Etiquetas de las variables
-                repel = TRUE,
-                labelsize = 5,
-              
-                # Flechas de las variables
-                col.var = "black",
-                geom.var = c("arrow", "text"),
-                arrowsize = 1,
-                xlab = paste0("PC1 (", round(summary(pca_ocurrencias)$importance[2,1]*100, 2), "%)"),
-                ylab = paste0("PC2 (", round(summary(pca_ocurrencias)$importance[2,2]*100, 2), "%)")) +
-  
-  # --- TEMA Y ESTILO PROFESIONAL ---
-  theme_minimal() +
   theme(
-    # Configuración de texto
-    text = element_text(family = "sans"),
-    plot.title = NULL,
-    plot.subtitle = NULL,
-    
-    # Ejes y etiquetas
+    # Texto de ejes
     axis.title = element_text(size = 14, face = "bold"),
-    axis.text = element_text(size = 12, color = "gray30"),
-    axis.line = element_line(color = "gray50", size = 0.5),
+    axis.text  = element_text(size = 12, color = "gray30"),
     
-    # Leyenda
-    legend.position = "right",
-    legend.title = element_text(size = 13, face = "bold"),
-    legend.text = element_text(size = 11),
-    legend.key.size = unit(1.2, "cm"),
+    # Sin título ni subtítulo
+    plot.title    = element_blank(),
+    plot.subtitle = element_blank(),
     
-    # Panel y grilla
+    # Estética de grillas
     panel.grid.major = element_line(color = "gray90", linetype = "dashed"),
     panel.grid.minor = element_blank(),
-    panel.background = element_rect(fill = "white", color = NA),
     
-    # Márgenes
-    plot.margin = unit(c(20, 20, 20, 20), "pt")
-  ) +
-  
-  # --- ETIQUETAS FINALES ---
-  labs(
-    fill = "Subgrupos",
-    caption = paste0("Varianza total explicada: ", 
-                     round(sum(summary(pca_ocurrencias)$importance[2,1:2]) * 100, 1), 
-                     "%")
+    # Leyenda clara
+    legend.position = "right",
+    legend.title    = element_blank(),
+    legend.text     = element_text(size = 12)
   )
+
+# --- 2. Añadir ocurrencias ---
+p_biplot_final <- p_biplot +
+  geom_point(data = occs_proj,
+             aes(x = PC1, y = PC2, color = grupo),
+             size = 2, alpha = 0.8) +
+  scale_color_manual(values = c("Ambiente disponible" = "cornflowerblue",
+                                "Presencias" = "red"))
+
+# Mostrar
+p_biplot_final
+
+
+
 
 # GUARDAR PCA
 
@@ -508,6 +455,12 @@ ggsave(
 )
 
 dev.off()
+
+
+# guardar valores de ocurrencias
+
+write_csv(valores_ocurrencias_limpios, here("valores_extraidos_E_lucunter_caribe.csv"))
+
 
 # GENERAR PUNTOS DE AUSENCIA PARA GLM, GAM Y RF
 
