@@ -4,7 +4,7 @@ library(corrplot) # graficas de correlación
 library(car) # algunas estadisticas
 library(here) # control de direcciones
 library(factoextra) # PCA
-library(cluster)
+
 
 
 #limpiar entorno
@@ -379,9 +379,31 @@ pca_area_estudio <- prcomp(variables_completas, center = TRUE, scale. = TRUE)
 
 summary(pca_area_estudio)
 
+# 1. Extraer las cargas de las primeras 5 componentes
+loadings <- as.data.frame(pca_area_estudio$rotation[, 1:5])
+
+# 2. Agregar columna con nombres de las variables
+loadings$Variable <- rownames(loadings)
+
+# 3. Reorganizar el dataframe en formato largo
+loadings_long <- loadings %>%
+  pivot_longer(cols = starts_with("PC"),
+               names_to = "Componente",
+               values_to = "Peso")
+
+# 4. Graficar
+ggplot(loadings_long, aes(x = Variable, y = Peso, fill = Componente)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_grid(Componente ~ ., scales = "free_y") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(y = "Peso de la variable",
+       x = "Variables ambientales",
+       title = "Cargas de las variables en las primeras 5 componentes")
+
 # 2. Proyectar fondo y ocurrencias al espacio PCA 
 
-fondo_proj <- as.data.frame(predict(pca_area_estudio, newdata = valores_fondo)) 
+fondo_proj <- as.data.frame(predict(pca_area_estudio, newdata = as.data.frame(variables_completas))) 
 fondo_proj$grupo <- "Fondo" 
 occs_proj <- as.data.frame(predict(pca_area_estudio, newdata = valores_ocurrencias_limpios[ , -c(9, 10)])) 
 occs_proj$grupo <- "Presencias"
@@ -389,6 +411,8 @@ occs_proj$grupo <- "Presencias"
 
 # Visualizar la varianza explicada por cada componente (gráfico de codo)
 fviz_eig(pca_area_estudio, addlabels = TRUE, ylim = c(0, 50))
+
+var_exp <- round(sum(summary(pca_area_estudio)$importance[2, 1:2]) * 100, 1)
 
 # --- 1. Biplot base ---
 p_biplot <- fviz_pca_biplot(
@@ -431,15 +455,16 @@ p_biplot <- fviz_pca_biplot(
     legend.position = "right",
     legend.title    = element_blank(),
     legend.text     = element_text(size = 12)
-  )
+  ) + 
+  labs(caption = paste0("Varianza total explicada (PC1 + PC2): ", var_exp, "%"))
 
 # --- 2. Añadir ocurrencias ---
 p_biplot_final <- p_biplot +
   geom_point(data = occs_proj,
              aes(x = PC1, y = PC2, color = grupo),
-             size = 2, alpha = 0.8) +
-  scale_color_manual(values = c("Ambiente disponible" = "cornflowerblue",
-                                "Presencias" = "red"))
+             size = 2, alpha = 0.8,
+             show.legend = FALSE) +
+  scale_color_manual(values = c("Presencias" = "red"))
 
 # Mostrar
 p_biplot_final
