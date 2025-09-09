@@ -20,42 +20,56 @@ evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF", "ENSAMBLE"),
 evaluación$Modelo <- factor(evaluación$Modelo, 
                             levels = c("MAXENT","GLM", "GAM", "RF", "ENSAMBLE"))
 
+evaluación_plot <- evaluación %>% 
+  # Convertir TSS a la escala de AUC
+  mutate(TSS_equiv = (TSS + 1) / 2) %>%
+  select(Modelo, AUC, TSS_equiv) %>%
+  pivot_longer(cols = -Modelo, names_to = "Métrica", values_to = "Valor")
 
-# GRAFICAR evaluación
-
-evaluación %>% 
-  pivot_longer(cols = -c(Modelo, Kappa, Umbral_TSS), 
-               names_to = "Métrica", 
-               values_to = "Valor") %>%
-ggplot(aes(x = Modelo, y = Valor, fill = Métrica)) +
+# Graficar
+ggplot(evaluación_plot, aes(x = Modelo, y = Valor, fill = Métrica)) +
   geom_bar(stat = "identity", position = "dodge") +
-  geom_hline(aes(yintercept = 0.7, linetype = "min. TSS"), 
-             color = "red1", 
-             linewidth = 0.8) +
+  
+  # Línea de referencia AUC
   geom_hline(aes(yintercept = 0.9, linetype = "min. AUC"), 
-             color = "gray12", 
-             linewidth = 0.8) +
+             color = "gray12", linewidth = 0.8) +
+  
+  # Línea de referencia TSS (convertida)
+  geom_hline(aes(yintercept = (0.7 + 1)/2, linetype = "min. TSS"), 
+             color = "red1", linewidth = 0.8) +
+  
   labs(
-       x = "Modelo",
-       y = "Valor de Evaluación"
-       ) +
+    x = "Modelo",
+    y = "Valor de AUC",
+    fill = "Métrica"
+  ) +
+  
   scale_fill_manual(values = c("AUC" = "#2E86AB",
-                             "TSS" = "#A23B72")) +
+                               "TSS_equiv" = "#A23B72"),
+                    labels = c("AUC", "TSS")) +
+  
   scale_linetype_manual(values = c("min. TSS" = "dashed",
                                    "min. AUC" = "dashed")) +
+  
+  # Eje secundario correcto
+  scale_y_continuous(
+    sec.axis = sec_axis(~ . * 2 - 1, name = "Valor de TSS")
+  ) +
+  
   theme_classic() +
-  theme(legend.position = "bottom",
-        legend.title =  element_blank(),
-        text = element_text(family = "sans", face = "bold"),
-        axis.text.x = element_text(angle = 45, hjust = 1)) 
-
+  theme(
+    legend.position = "bottom",
+    legend.title    = element_blank(),
+    text            = element_text(family = "sans", face = "bold"),
+    axis.text.x     = element_text(angle = 45, hjust = 1)
+  )
 
 # GUARDAR GRAFICO
 
 ggsave(here("..", "..", "GRAFICAS", "Evaluacion_modelos.png"),
        width = 10, height = 6, dpi = 1000)
 
-
+dev.off()
 
 # Define la ruta base a la carpeta
 pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
