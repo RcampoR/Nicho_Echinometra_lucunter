@@ -221,6 +221,9 @@ mundo <- world(path=".")
 crs(mundo) <- "EPSG:4326"
 
 
+tmap_mode("view")
+
+
 mapa_contexto <- tm_shape(mundo, xlim = c(-100, -40), ylim = c(-60, 40)) + 
   tm_fill(fill = "white") + 
   tm_borders(col = "gray23", lwd = 0.5) + 
@@ -435,3 +438,5 @@ cat("\n--- Área Idónea por País ---\n")
 for (pais in names(resultados_area_por_pais)) {
   cat("El área idónea para", pais, "es de:", resultados_area_por_pais[[pais]], "km².\n")
 }
+
+

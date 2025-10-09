@@ -274,23 +274,33 @@ nombres_variables <- c(
   "salinidad_rango" = "Rango de Salinidad"
 )
 
-ensamble_importancia %>% 
-  ggplot(aes(x = ENSAMBLE, y = reorder(Variable, ENSAMBLE))) +
-  geom_bar(fill = "#2E86AB",
-           stat = "identity", 
-           position = "dodge",
-           orientation = "y") +
+
+ensamble_importancia %>%
+  ggplot(aes(x = ENSAMBLE, y = reorder(Variable, ENSAMBLE), fill = ENSAMBLE)) +
+  geom_bar(stat = "identity", position = "dodge", orientation = "y", show.legend = FALSE) +
+  geom_text(aes(label = paste0(round(ENSAMBLE * 100, 1), "%")),
+            hjust = -0.1,
+            color = "black",
+            size = 3.5,
+            fontface = "bold") +
+  scale_fill_gradient(
+    low = "#D4EBF2",   # azul muy claro
+    high = "#005A8D",  # azul profundo
+    name = "Importancia (%)"
+  ) +
   labs(
-    y = "Variables Oceanograficas",
-    x = "Importancia",
-    
+    y = "Variables Oceanográficas",
+    x = "Importancia"
   ) +
   scale_y_discrete(labels = nombres_variables) +
   theme_classic() +
-  theme(legend.position = "bottom",
-        legend.title =  element_blank(),
-        text = element_text(family = "sans", face = "bold"),
-        axis.text.x = element_text(hjust = 1)) 
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    text = element_text(family = "sans", size = 12),
+    axis.title = element_text(size = 14, face = "bold")
+  ) +
+  coord_cartesian(clip = "off")
 
 ggsave(here("..", "..", "GRAFICAS", "importancia_variables.png"),
        dpi = 1000,
