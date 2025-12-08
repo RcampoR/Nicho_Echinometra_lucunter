@@ -6,6 +6,8 @@ library(here)# control de direcciones
 library(randomForest)
 library(mgcv) # GAM
 library(predicts)
+
+
 #limpiar entorno
 rm(list = ls())
 
@@ -262,10 +264,10 @@ mapa_ocurrencias <- tm_shape(Caribe) +
   tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
   tm_graticules(lines = FALSE,
                 labels.col = "gray10") + 
-  tm_add_legend(title = "LEYENDA",
+  tm_add_legend(title = "LEGEND",
                 type = "polygons",
-                labels = c("Mar Caribe", "Paises area de estudio", 
-                           expression("Puntos de Ocurrencia " * italic("Echinometra lucunter"))),
+                labels = c("Caribbean sea", "Countries in the study area", 
+                           expression("Occurrence points " * italic("Echinometra lucunter"))),
                 fill = c("lightblue", "gray89", "red"),
                 fontfamily = "sans",
                 position = c("top", "right")) +
@@ -309,20 +311,20 @@ Mapa_idoneidad <-  tm_shape(Caribe) +
   tm_shape(Raster_idoneidad) +
   tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
                                  breaks = c(0, 0.564, 0.7, 0.8, 0.9, 1),
-                                 labels = c("< 0.564 (No presencia)", 
+                                 labels = c("< 0.564 (Absence)", 
                                             "0.564 a 0.7",
                                             "0.7 a 0.8",
                                             "0.8 a 9",
                                             "0.9 a 1")),
-            col.legend = tm_legend(title = "Probabilidad de presencia",
+            col.legend = tm_legend(title = "Probability of presence",
                                    position = c("top", "right"))) +
   tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
   tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
   tm_graticules(lines = FALSE,
                 labels.col = "gray10") +
-  tm_add_legend(title = "LEYENDA",
+  tm_add_legend(title = "LEGEND",
                 type = "polygons",
-                labels = c("Mar Caribe", "Paises area de estudio"),
+                labels = c("Caribbean sea", "Countries in the study area"),
                 fill = c("lightblue", "gray89"),
                 fontfamily = "sans",
                 position = c("top", "right")) +
@@ -344,43 +346,6 @@ dev.copy(png,
          res = 1000)   
 
 dev.off()
-
-
-
-
-# MAPA BINARIO
-tm_shape(Caribe) +
-  tm_polygons(fill = "lightblue") +
-  tm_shape(Colombia) +
-  tm_fill(fill = "gray89") + 
-  tm_shape(Panama) +
-  tm_polygons(fill = "gray89") +
-  tm_shape(Costa_rica) +
-  tm_polygons(fill = "gray89") +
-  tm_shape(Nicaragua) +
-  tm_polygons(fill = "gray89") +
-  tm_shape(Raster_idoneidad) +
-  tm_raster(col.scale = tm_scale(values = c("lightblue", "red4"),
-                                 breaks = c(0, 0.564, 1),
-                                 labels = c("No presencia", 
-                                            "Presencia")),
-            col.legend = tm_legend(title = "Probabilidad de presencia",
-                                   position = c("top", "right"))) +
-  tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
-  tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
-  tm_graticules(lines = FALSE,
-                labels.col = "gray10") +
-  tm_add_legend(title = "LEYENDA",
-                type = "polygons",
-                labels = c("Mar Caribe", "Paises area de estudio"),
-                fill = c("lightblue", "gray89"),
-                fontfamily = "sans",
-                position = c("top", "right")) +
-  tm_layout(frame = TRUE,
-            frame.lwd = 3,
-            frame.color = "gray20")
-
-
 
 
 # Definir el umbral
