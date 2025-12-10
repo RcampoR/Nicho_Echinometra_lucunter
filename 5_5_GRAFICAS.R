@@ -1,4 +1,3 @@
-
 library(here)
 library(terra)
 library(tmap)
@@ -6,62 +5,66 @@ library(predicts)
 library(tidyverse)
 library(randomForest)
 library(mgcv)
+library(rjava)
 
 rm(list = ls())
 
-
-
-evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF", "ENSAMBLE"),
+# Data translation: 'evaluación' -> 'evaluation', 'Modelo' -> 'Model', 'Umbral_TSS' -> 'TSS_Threshold'
+evaluation <- tibble(Model = c("MAXENT", "GLM", "GAM", "RF", "ENSEMBLE"),
                      AUC = c(0.957, 0.9503, 0.969, 0.997, 0.98),
                      TSS = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
                      Kappa = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
-                     Umbral_TSS = c(0.2830035, 0.641, 0.349, 0.664, 0.564))
+                     TSS_Threshold = c(0.2830035, 0.641, 0.349, 0.664, 0.564))
 
-evaluación$Modelo <- factor(evaluación$Modelo, 
-                            levels = c("MAXENT","GLM", "GAM", "RF", "ENSAMBLE"))
+evaluation$Model <- factor(evaluation$Model,
+                           levels = c("MAXENT","GLM", "GAM", "RF", "ENSEMBLE"))
 
-evaluación_plot <- evaluación %>% 
-  # Convertir TSS a la escala de AUC
+# Data manipulation translation: 'evaluación_plot' -> 'evaluation_plot', 'Métrica' -> 'Metric', 'Valor' -> 'Value'
+evaluation_plot <- evaluation %>%
+  # Convert TSS to the AUC scale (0 to 1) for plotting
   mutate(TSS_equiv = (TSS + 1) / 2) %>%
-  select(Modelo, AUC, TSS_equiv) %>%
-  pivot_longer(cols = -Modelo, names_to = "Métrica", values_to = "Valor")
+  select(Model, AUC, TSS_equiv) %>%
+  pivot_longer(cols = -Model, names_to = "Metric", values_to = "Value")
 
-# Graficar
-ggplot(evaluación_plot, aes(x = Modelo, y = Valor, fill = Métrica)) +
+# Plotting the results
+ggplot(evaluation_plot, aes(x = Model, y = Value, fill = Metric)) +
   geom_bar(stat = "identity", position = "dodge") +
   
-  # Línea de referencia AUC
-  geom_hline(aes(yintercept = 0.9, linetype = "min. AUC"), 
+  # Reference line for AUC
+  geom_hline(aes(yintercept = 0.9, linetype = "min. AUC"),
              color = "gray12", linewidth = 0.8) +
   
-  # Línea de referencia TSS (convertida)
-  geom_hline(aes(yintercept = (0.7 + 1)/2, linetype = "min. TSS"), 
+  # Reference line for TSS (converted)
+  geom_hline(aes(yintercept = (0.7 + 1)/2, linetype = "min. TSS"),
              color = "red1", linewidth = 0.8) +
   
+  # Labels translation
   labs(
-    x = "Modelo",
-    y = "Valor de AUC",
-    fill = "Métrica"
+    x = "Model",
+    y = "AUC Value",
+    fill = "Metric"
   ) +
   
+  # Scale fill translation (labels)
   scale_fill_manual(values = c("AUC" = "#2E86AB",
                                "TSS_equiv" = "#A23B72"),
                     labels = c("AUC", "TSS")) +
   
+  # Linetype legend translation
   scale_linetype_manual(values = c("min. TSS" = "dashed",
                                    "min. AUC" = "dashed")) +
   
-  # Eje secundario correcto
+  # Correct secondary axis for TSS translation
   scale_y_continuous(
-    sec.axis = sec_axis(~ . * 2 - 1, name = "Valor de TSS")
+    sec.axis = sec_axis(~ . * 2 - 1, name = "TSS Value") # The inverse transformation: (Y * 2) - 1
   ) +
   
   theme_classic() +
   theme(
     legend.position = "bottom",
-    legend.title    = element_blank(),
-    text            = element_text(family = "sans", face = "bold"),
-    axis.text.x     = element_text(angle = 45, hjust = 1)
+    legend.title = element_blank(),
+    text = element_text(family = "sans", face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
 # GUARDAR GRAFICO
@@ -143,7 +146,6 @@ datos_modelos <- read_delim(here("datos_modelos.csv"))
 partialResponse(model = SDM_maxent, valores_extraidos, "ph_rango")
 
 
-
 # IMPORTANCIA DE LAS VARIABLES
 
 rm(list = ls())
@@ -170,7 +172,7 @@ set.seed(456)
 
 imp_maxent <- varImportance(model = SDM_maxent, 
                             stat = "AUC", n = 40, value = "relative") %>% 
-                            as.data.frame() 
+  as.data.frame() 
 
 imp_1 <- imp_maxent %>% 
   transmute(Variable = rownames(imp_maxent),
@@ -240,11 +242,11 @@ evaluación <- tibble(Modelo = c("MAXENT", "GLM", "GAM", "RF", "ENSAMBLE"),
 
 
 pesos_TSS <- evaluación[, c(1, 3)] %>%
-             filter(!Modelo == "ENSAMBLE") %>% 
-             transmute(Modelo = Modelo,
-                       Peso = TSS/sum(TSS))
-             
-             
+  filter(!Modelo == "ENSAMBLE") %>% 
+  transmute(Modelo = Modelo,
+            Peso = TSS/sum(TSS))
+
+
 # Calcular ensamble
 ensamble_importancia <- importancia_normalizada %>%
   # Convertir nombres de modelos a mayúsculas para que coincidan con pesos_TSS
@@ -259,19 +261,18 @@ ensamble_importancia <- importancia_normalizada %>%
   arrange(desc(ENSAMBLE))
 
 
-
-
-
-# Crear un vector con los nuevos nombres de las variables
+# ----------------------------------------------------------------------
+# Cambios en la traducción de las etiquetas para el gráfico (al inglés)
+# ----------------------------------------------------------------------
 nombres_variables <- c(
-  "distancia_costa" = "Distancia a la Costa",
-  "ph_rango" = "Rango de pH",
-  "batimetria" = "Batimetría",
-  "temperatura_rango" = "Rango de Temperatura",
-  "clorofila_media" = "Clorofila-a Media",
-  "velocidad_corriente_media" = "Velocidad de Corriente Media",
-  "concavidad" = "Concavidad del Fondo",
-  "salinidad_rango" = "Rango de Salinidad"
+  "distancia_costa" = "Distance to Coast",
+  "ph_rango" = "pH Range",
+  "batimetria" = "Bathymetry",
+  "temperatura_rango" = "Temperature Range",
+  "clorofila_media" = "Mean Chlorophyll-a",
+  "velocidad_corriente_media" = "Mean Current Speed",
+  "concavidad" = "Seafloor Concavity",
+  "salinidad_rango" = "Salinity Range"
 )
 
 
@@ -286,11 +287,11 @@ ensamble_importancia %>%
   scale_fill_gradient(
     low = "#D4EBF2",   # azul muy claro
     high = "#005A8D",  # azul profundo
-    name = "Importancia (%)"
+    name = "Importance (%)" # Etiqueta de leyenda traducida
   ) +
   labs(
-    y = "Variables Oceanográficas",
-    x = "Importancia"
+    y = "Oceanographic Variables", # Eje Y traducido
+    x = "Importance" # Eje X traducido
   ) +
   scale_y_discrete(labels = nombres_variables) +
   theme_classic() +
@@ -308,5 +309,3 @@ ggsave(here("..", "..", "GRAFICAS", "importancia_variables.png"),
        width = 10)  
 
 dev.off()
-                        
-  
