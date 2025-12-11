@@ -223,10 +223,10 @@ mundo <- world(path=".")
 crs(mundo) <- "EPSG:4326"
 
 
-tmap_mode("view")
+tmap_mode("plot")
 
 
-mapa_contexto <- tm_shape(mundo, xlim = c(-100, -40), ylim = c(-60, 40)) + 
+mapa_contexto <- tm_shape(mundo, xlim = c(-90, -65), ylim = c(-8, 20)) + 
   tm_fill(fill = "white") + 
   tm_borders(col = "gray23", lwd = 0.5) + 
   tm_shape(Colombia) + 
@@ -273,25 +273,19 @@ mapa_ocurrencias <- tm_shape(Caribe) +
                 position = c("top", "right")) +
   tm_layout(frame = TRUE,
             frame.lwd = 3,
-            frame.color = "gray20") 
-
-
-
-
-# imprimir mapa_ocurrencias
-print(mapa_ocurrencias)
-print(mapa_contexto, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.25))
+            frame.color = "gray20") +
+  tm_inset(mapa_contexto, position = c("bottom", "right"))
 
 
 # guardar mapa 
-dev.copy(png, 
+tmap_save(tm = mapa_ocurrencias, 
          filename = here("..", "..", "MAPAS", "mapa_distribución_caribe.png"), 
          width = 11,        
          height = 7,       
          units = "in",     # Unidades en pulgadas
-         res = 1000)   
+         dpi = 1000)   
 
-dev.off()
+
 
 
 
@@ -317,7 +311,7 @@ Mapa_idoneidad <-  tm_shape(Caribe) +
                                             "0.8 a 9",
                                             "0.9 a 1")),
             col.legend = tm_legend(title = "Probability of presence",
-                                   position = c("top", "right"))) +
+                                   position = c("bottom", "right"))) +
   tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
   tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
   tm_graticules(lines = FALSE,
@@ -327,23 +321,19 @@ Mapa_idoneidad <-  tm_shape(Caribe) +
                 labels = c("Caribbean sea", "Countries in the study area"),
                 fill = c("lightblue", "gray89"),
                 fontfamily = "sans",
-                position = c("top", "right")) +
+                position = c("bottom", "right")) +
   tm_layout(frame = TRUE,
             frame.lwd = 3,
-            frame.color = "gray20")
+            frame.color = "gray20") 
 
-
-# imprimir mapa_idoneidad
-print(Mapa_idoneidad)
-print(mapa_contexto, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.25))
 
 # guardar mapa 
-dev.copy(png, 
+tmap_save(Mapa_idoneidad, 
          filename = here("..", "..", "MAPAS", "mapa_idoneidad_caribe.png"), 
          width = 11,       
          height = 7,       
          units = "in",     # Unidades en pulgadas
-         res = 1000)   
+         dpi = 1000)   
 
 dev.off()
 

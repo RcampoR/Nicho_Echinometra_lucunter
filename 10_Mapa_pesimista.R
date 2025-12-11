@@ -131,34 +131,7 @@ raster_pesimista_ponderado <- rast(here("..", "..", "MAPAS", "raster_pesimista_p
 
 
 
-# MAPA CONTEXTO 
-
-
-
-mundo <- world(path=".")
-crs(mundo) <- "EPSG:4326"
-
-
-mapa_contexto <- tm_shape(mundo, xlim = c(-100, -40), ylim = c(-60, 40)) + 
-  tm_fill(fill = "white") + 
-  tm_borders(col = "gray23", lwd = 0.5) + 
-  tm_shape(Colombia) + 
-  tm_polygons(fill = "gray89") + 
-  tm_shape(Panama) +
-  tm_polygons(fill = "gray89") + 
-  tm_shape(Costa_rica) +
-  tm_polygons(fill = "gray89") +
-  tm_shape(Nicaragua) +
-  tm_polygons(fill = "gray89") +
-  tm_borders(col = "black", lwd = 1.2) +  
-  tm_shape(Caribe) +
-  tm_polygons(fill = "lightblue") 
-
-
-
-
-
-
+# mapa_pesimista (mapa pesimista)
 mapa_pesimista <-  tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") +
   tm_shape(Colombia) +
@@ -172,38 +145,34 @@ mapa_pesimista <-  tm_shape(Caribe) +
   tm_shape(raster_pesimista_ponderado) +
   tm_raster(col.scale = tm_scale(values = "brewer.yl_or_rd",
                                  breaks = c(0, 0.564, 0.7, 0.8, 0.9, 1),
-                                 labels = c("< 0.564 (No presencia)", 
-                                            "0.564 a 0.7",
-                                            "0.7 a 0.8",
-                                            "0.8 a 9",
-                                            "0.9 a 1")),
-            col.legend = tm_legend(title = "Probabilidad de presencia",
-                                   position = c("top", "right"))) +
+                                 labels = c("< 0.564 (No presence)", # Traducción: No presencia -> No presence
+                                            "0.564 to 0.7", # Traducción: a -> to
+                                            "0.7 to 0.8", # Traducción: a -> to
+                                            "0.8 to 9", # Traducción: a -> to
+                                            "0.9 to 1")), # Traducción: a -> to
+            col.legend = tm_legend(title = "Probability of presence", # Traducción: Probabilidad de presencia -> Probability of Presence
+                                   position = c("bottom", "right"))) +
   tm_scalebar(position = c("bottom", "left"), text.size = 0.5) +
   tm_compass(position = c("top", "left"), size = 3, type = "arrow") +
   tm_graticules(lines = FALSE,
                 labels.col = "gray10") +
-  tm_add_legend(title = "LEYENDA",
+  tm_add_legend(title = "LEGEND", # Traducción: LEYENDA -> LEGEND
                 type = "polygons",
-                labels = c("Mar Caribe", "Paises area de estudio"),
+                labels = c("Caribbean Sea", "Study Area Countries"), # Traducción: Mar Caribe, Paises area de estudio -> Caribbean Sea, Study Area Countries
                 fill = c("lightblue", "gray89"),
                 fontfamily = "sans",
-                position = c("top", "right")) +
+                position = c("bottom", "right")) +
   tm_layout(frame = TRUE,
             frame.lwd = 3,
             frame.color = "gray20")
 
-# imprimir mapa_optimista
-print(mapa_pesimista)
-print(mapa_contexto, vp = grid::viewport(0.92, 0.25, width = 0.2, height = 0.25))
-
-# guardar mapa 
-dev.copy(png, 
-         filename = here("..", "..", "MAPAS", "mapa_pesimista_caribe.png"), 
-         width = 11,       
-         height = 7,       
-         units = "in",     # Unidades en pulgadas
-         res = 1000)   
+# guardar mapa (save map)
+tmap_save(mapa_pesimista, 
+          filename = here("..", "..", "MAPAS", "mapa_pesimista_caribe.png"), # Ajuste de nombre de archivo (opcional) y carpeta
+          width = 11,       
+          height = 7,       
+          units = "in",     # Unidades en pulgadas
+          dpi = 1000)   
 
 dev.off()
 
