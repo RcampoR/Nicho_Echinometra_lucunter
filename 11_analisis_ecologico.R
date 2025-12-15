@@ -161,7 +161,7 @@ tmap_save(
   filename = here("..", "..", 
                   "MAPAS", 
                   "mapa_cambio_optimista.png"),
-  width = 10,
+  width = 11,
   height = 7,
   dpi = 1000
 )
@@ -214,7 +214,7 @@ tmap_save(
   filename = here("..", "..", 
                   "MAPAS", 
                   "mapa_cambio_pesimista.png"),
-  width = 10,
+  width = 11,
   height = 7,
   dpi = 1000
 )

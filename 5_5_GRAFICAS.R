@@ -309,3 +309,56 @@ ggsave(here("..", "..", "GRAFICAS", "importancia_variables.png"),
        width = 10)  
 
 dev.off()
+
+
+# TABLA DE AREAS
+
+
+datos_escenarios <- tibble(
+  pais = rep(c("Panama", "Costa Rica", "Nicaragua", "Colombia"), times = 3),
+  escenario = rep(c("Actual", "Optimista", "Pesimista"), each = 4),
+  area_km2 = c(
+    # Actual
+    3475.25, 250.84, 331.23, 7213.72,
+    # Optimista
+    109.67, 0.00, 4.96, 1045.22,
+    # Pesimista
+    2.53, 0.00, 0.84, 131.84
+  )
+)
+
+datos_escenarios
+
+# GRAFICA
+
+datos_escenarios |> 
+  ggplot(aes(x = reorder(pais, -area_km2),
+             y = log(area_km2 + 1),
+             fill = escenario)) + 
+  geom_col(position = position_dodge(width = 0.8),
+           width = 0.7) + 
+  scale_fill_manual(
+    values = c(
+      "Actual"    = "#005A8D",
+      "Optimista" = "#6BAED6",
+      "Pesimista" = "#D4EBF2"
+    )
+  ) +
+  labs(
+    x = "Country",
+    y = "log(Area (km² + 1))",
+    fill = "Stage"
+  ) +
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 12, face = "bold"),
+    axis.text  = element_text(size = 11),
+    text       = element_text(family = "sans"),
+    legend.position = "top"
+  )
+
+
+ggsave(here("..", "..", "GRAFICAS", "Areas_idoneas_km2.png"),
+       width = 11, height = 7, dpi = 1000)
+
+dev.off()
