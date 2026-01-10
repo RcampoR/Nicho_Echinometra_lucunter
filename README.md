@@ -32,14 +32,6 @@ Se utilizaron capas de MARSPEC y Bio-ORACLE v3.0, incluyendo:
 
     /results: Mapas de idoneidad en formato .TIFF 
 
-🚀 Resultados Clave
-
-    Contracción de nicho: Se proyecta una pérdida de hasta el 98.8% del hábitat idóneo en el escenario pesimista (SSP5-8.5).
-
-    Refugios Climáticos: Identificación de áreas resilientes en el Archipiélago de San Andrés y Providencia y La Guajira (Colombia).
-
-    Extinciones locales: Riesgo crítico para las poblaciones de Costa Rica y Nicaragua.
-
 ✍️ Autores
 
     Ronaldo D. Campo R. - Investigador Principal - rcamporomero88@correo.unicordoba.edu.co
