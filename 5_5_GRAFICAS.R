@@ -316,7 +316,7 @@ dev.off()
 
 datos_escenarios <- tibble(
   pais = rep(c("Panama", "Costa Rica", "Nicaragua", "Colombia"), times = 3),
-  escenario = rep(c("Actual", "Optimista", "Pesimista"), each = 4),
+  escenario = rep(c("Current", "Optimistic", "Pessimistic"), each = 4),
   area_km2 = c(
     # Actual
     3475.25, 250.84, 331.23, 7213.72,
@@ -339,9 +339,9 @@ datos_escenarios |>
            width = 0.7) + 
   scale_fill_manual(
     values = c(
-      "Actual"    = "#005A8D",
-      "Optimista" = "#6BAED6",
-      "Pesimista" = "#D4EBF2"
+      "Current"    = "#005A8D",
+      "Optimistic" = "#6BAED6",
+      "Pessimistic" = "#D4EBF2"
     )
   ) +
   labs(
