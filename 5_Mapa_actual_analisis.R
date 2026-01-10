@@ -1,10 +1,10 @@
-library(terra) # raster y vectores
-library(tmap) # mapas tematicos
-library(tidyverse) # maniulacion de datos y graficas
-library(geodata) # datos espaciales en linea
-library(here)# control de direcciones
+library(terra) 
+library(tmap) 
+library(tidyverse) 
+library(geodata) 
+library(here)
 library(randomForest)
-library(mgcv) # GAM
+library(mgcv) 
 library(predicts)
 
 
@@ -98,7 +98,6 @@ sdmdata <- read_csv(here("datos_modelos.csv")) %>%
   rename(pb = presencia_ausencia)
 
 # El Random Forest trabaja mejor con la variable de respuesta como factor
-# (Aunque puede manejarla como numérica, para clasificación es mejor factor)
 sdmdata$pb <- as.factor(sdmdata$pb)
 
 
@@ -117,22 +116,14 @@ pres_vals_ensamble <- valores_predichos_ensamble[sdmdata$pb == 1]
 abs_vals_ensamble <- valores_predichos_ensamble[sdmdata$pb == 0]
 
 # Usar pa_evaluate (o dismo::evaluate) para una evaluación completa
-# Es consistente usar predicts ya que lo usaste para la mayoría de los modelos
 eval_ensamble <- pa_evaluate(p = pres_vals_ensamble, a = abs_vals_ensamble)
 
 # --- 3. OBTENER EL UMBRAL ÓPTIMO PARA EL ENSAMBLE ---
 
-# Elige la métrica que quieres optimizar (por ejemplo, max_spec_sens para TSS)
-# Ya vimos que para tus modelos, este umbral también maximiza Kappa.
 umbral_optimo_ensamble <- eval_ensamble@thresholds$max_spec_sens
 
 cat("\n--- Umbral óptimo para el ensamble (max_TSS/Kappa) ---\n")
 cat("Umbral:", round(umbral_optimo_ensamble, 3), "\n")
-
-
-
-
-
 
 cat("\n--- Evaluación del Modelo Final ---\n")
 print(eval_ensamble@stats)
@@ -161,10 +152,6 @@ conf_matrix_ensamble <- table(
 )
 
 print(conf_matrix_ensamble)
-
-
-
-
 
 
 
@@ -282,11 +269,8 @@ tmap_save(tm = mapa_ocurrencias,
          filename = here("..", "..", "MAPAS", "mapa_distribución_caribe.png"), 
          width = 11,        
          height = 7,       
-         units = "in",     # Unidades en pulgadas
+         units = "in",     
          dpi = 1000)   
-
-
-
 
 
 
@@ -332,7 +316,7 @@ tmap_save(Mapa_idoneidad,
          filename = here("..", "..", "MAPAS", "mapa_idoneidad_caribe.png"), 
          width = 11,       
          height = 7,       
-         units = "in",     # Unidades en pulgadas
+         units = "in",     
          dpi = 1000)   
 
 dev.off()
@@ -364,7 +348,6 @@ Caribe_por_pais <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp
 resultados_area_por_pais <- list()
 
 # Obtener los nombres únicos de los países de tu SpatVector Caribe_por_pais
-# **Ajusta "NAME" por el nombre real de la columna en tu SHP que identifica el país.**
 paises_en_caribe <- unique(Caribe_por_pais$SOVEREIGN1)
 
 # Bucle para iterar sobre cada país y calcular el área
