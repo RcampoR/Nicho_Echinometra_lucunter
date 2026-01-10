@@ -1,5 +1,3 @@
-
-
 library(terra)
 library(here)
 library(tidyverse)
@@ -7,9 +5,7 @@ library(sdm)
 library(tmap)
 
 
-
 rm(list = ls())
-
 
 
 
@@ -42,12 +38,6 @@ plot(mapa_cambio_ssp1)
 
 # Reclasificar los valores del mapa para una mejor visualización
 
-# Ausente (no idóneo en ninguno de los escenarios) -> 0
-#ganancia (actual no idoneo, futuro si es idoneo) -> 1
-# Pérdida (idóneo en Actual, no en SSP1) -> 2
-# Estable (idóneo en ambos escenarios) -> 3
-
-
 # Crear un mapa de cambio neto para los escenarios "Actual" vs. "SSP5"
 mapa_cambio_ssp5 <- (raster_binario_ACTUAL * 2) + raster_binario_SSP5
 
@@ -67,9 +57,7 @@ Caribe <- vect(here("..", "..", "Vectores_caribe", "Capa_Mar_Caribe.shp")) %>%
   aggregate(dissolve = TRUE) 
 
 
-
-
-# MAPA BINARIO ACTUAL - Sintaxis moderna tmap v4
+# MAPA BINARIO ACTUAL 
 
 Mapa_binario_ACTUAL <- tm_shape(Caribe) +
   tm_polygons(fill = "lightblue") +
