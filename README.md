@@ -30,7 +30,7 @@ Se utilizaron capas de MARSPEC y Bio-ORACLE v3.0, incluyendo:
 
     /scripts: Código en R para la limpieza de datos, validación cruzada (k=5) y ensamble.
 
-    /results: Mapas de idoneidad en formato .TIFF 
+    /results: Mapas de idoneidad en formato .TIFF e importancia de variables.
 
 ✍️ Autores
 
@@ -44,4 +44,24 @@ Se utilizaron capas de MARSPEC y Bio-ORACLE v3.0, incluyendo:
 
     Laboratorios La Ciénaga.
 
-Nota: Este trabajo está alineado con los Objetivos de Desarrollo Sostenible (ODS) 13 y 14 de la ONU.
+⚖️ Licencia
+
+Este proyecto está bajo la Licencia Creative Commons Atribución 4.0 Internacional (CC BY 4.0).
+
+Usted es libre de:
+
+    Compartir: Copiar y redistribuir el material en cualquier medio o formato.
+
+    Adaptar: Remezclar, transformar y construir a partir del material para cualquier propósito, incluso comercialmente.
+
+Bajo los siguientes términos:
+
+    Atribución: Debe dar crédito de manera adecuada, brindar un enlace a la licencia e indicar si se han realizado cambios.
+
+📄 Citación
+
+Si utilizas estos datos o scripts en tu investigación, por favor cita de la siguiente manera:
+
+    Campo, R. D. & Diaz, A. F. (2026). Proyecciones de la idoneidad de hábitat de Echinometra lucunter en el Caribe, bajo escenarios de cambio climático. Universidad de Córdoba, Colombia.
+
+Contacto: Para dudas sobre la implementación del modelo o acceso a las capas raster procesadas, contactar a los autores.
