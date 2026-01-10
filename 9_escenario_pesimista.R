@@ -1,10 +1,10 @@
-library(terra) # raster y vectores
-library(tmap) # mapas tematicos
-library(tidyverse) # maniulacion de datos y graficas
-library(geodata) # datos espaciales en linea
-library(here)# control de direcciones
+library(terra) 
+library(tmap) 
+library(tidyverse) 
+library(geodata) 
+library(here)
 library(randomForest)
-library(mgcv) # GAM
+library(mgcv)
 library(predicts)
 
 
@@ -171,7 +171,7 @@ tmap_save(mapa_pesimista,
           filename = here("..", "..", "MAPAS", "mapa_pesimista_caribe.png"), # Ajuste de nombre de archivo (opcional) y carpeta
           width = 11,       
           height = 7,       
-          units = "in",     # Unidades en pulgadas
+          units = "in",    
           dpi = 1000)   
 
 dev.off()
