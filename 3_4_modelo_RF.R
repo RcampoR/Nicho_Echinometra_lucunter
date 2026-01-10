@@ -2,7 +2,7 @@ library(here)
 library(terra)
 library(predicts)
 library(tidyverse)
-library(randomForest) # El paquete para Random Forest
+library(randomForest) 
 library(tmap)
 
 # Set seed para reproducibilidad
@@ -53,11 +53,6 @@ variables_completas <- c(clorofila_media,
 
 
 
-
-
-
-
-
 # Cargar los datos de presencia/ausencia
 sdmdata <- read_csv(here("datos_modelos.csv")) [ , -c(10, 11)] %>%
   rename(pb = presencia_ausencia)
@@ -93,18 +88,16 @@ for (i in 1:k) {
   formula_rf <- as.formula(paste("pb ~", paste(var_names, collapse = " + ")))
   
   # --- Ajustar el modelo Random Forest para este fold ---
-  # El argumento 'proximity = TRUE' es opcional pero útil para análisis posterior
   m_rf <- randomForest(formula_rf,
                        data = train_data,
-                       ntree = 500, # Número de árboles en el bosque
-                       mtry = 2,   # Número de variables muestreadas en cada división (ajustable)
+                       ntree = 500, 
+                       mtry = 2,   
                        importance = TRUE,
                        maxnodes = 10,
                        nodesize = 20,
-                       keep.forest = TRUE) # Mantener el bosque para predicciones posteriores)
+                       keep.forest = TRUE) 
   
   # Predecir los valores de probabilidad (0-1) para los datos de prueba
-  # Para Random Forest, el 'type="prob"' da las probabilidades de cada clase.
   p <- predict(m_rf, newdata = pres_test, type = "prob")[, 2] # Probabilidad de la clase "1" (presencia)
   a <- predict(m_rf, newdata = back_test, type = "prob")[, 2] # Probabilidad de la clase "1" (presencia)
   
@@ -190,7 +183,6 @@ title("Curva ROC del Modelo Random Forest Final")
 # --- 8. PREDECIR Y VISUALIZAR EL MAPA FINAL ---
 
 # Predecir el mapa de idoneidad con el modelo Random Forest
-# La predicción debe ser del tipo "prob" para obtener las probabilidades
 raster_idoneidad <- terra::predict(variables_completas, final_rf_model, type = "prob")
 
 tmap_mode("view")

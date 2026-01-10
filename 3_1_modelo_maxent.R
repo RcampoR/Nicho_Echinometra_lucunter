@@ -1,12 +1,12 @@
-library(terra) # raster y vectores
-library(dplyr) # manipulkación de datos
-library(ENMeval) # evaluación de hiperparametros para MAXENT
-library(rJava) # Java en R, para maxent
-library(dismo) # Modelo MAXENT final
-library(raster) # Raster compatible con dismo 
-library(tmap) # Mapas tematicos
-library(here) # control de direcciones
-library(readr) # leer csv
+library(terra) 
+library(dplyr) 
+library(ENMeval) 
+library(rJava) 
+library(dismo)
+library(raster) 
+library(tmap) 
+library(here)
+library(readr) 
 library(predicts)
 
 
@@ -67,15 +67,10 @@ options(ENMeval.maxent.jar = here("..", "..", "Proyecmaxent_software", "maxent.j
 
 # ---  Realizar la evaluación y optimización con ENMeval ---
 
-# Definir las combinaciones de Feature Classes (FC) y Regularization Multipliers (RM) a probar
-# Es buena práctica empezar con un rango razonable.
-# La elección de FCs puede depender de la cantidad de los puntos de presencia.
-# pocos datos (< 50-100), se podría mantener las FCs más simples (L, LQ, H).
-# Si hay muchos (>200), se pueden explorar más complejas (LQHPT).
 
-ENMeval_FCs <- c("L", "LQ", "H", "LQH") # Considerar el número de puntos de presencia 
+ENMeval_FCs <- c("L", "LQ", "H", "LQH")  
 
-ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) # se puedeajustar este rango
+ENMeval_RMs <- seq(1.0, 5.0, by = 0.5) 
 
 
 # Ejecutar ENMeval con validación cruzada espacial
@@ -85,18 +80,15 @@ eval_results <- ENMeval::ENMevaluate(
   occs = ocurrencias_E_lucunter[, c("lon", "lat")],
   envs = variables_raster,
   bg = puntos_fondo_submuestreados,
-  # Argumentos para la optimización de hiperparámetros
   tune.args = list(fc = ENMeval_FCs, rm = ENMeval_RMs),
-  # Método de partición
   partitions = "randomkfold",
-  partition.settings = list(kfolds = 5), # kfolds para randomkfold
+  partition.settings = list(kfolds = 5), 
   algorithm = "maxent.jar",
   categoricals = NULL,
-  # Argumentos para MaxEnt.jar, dentro de other.settings
   other.settings = list(
     "outputformat=logistic",
     "betamultiplier=1",
-    doClamp = TRUE, # doClamp también puede ir aquí, si no es un argumento directo de ENMevaluate
+    doClamp = TRUE, 
     other.args = c("jackknife=TRUE", "responsecurves=TRUE")
   ),
   parallel = TRUE,

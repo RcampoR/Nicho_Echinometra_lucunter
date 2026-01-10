@@ -1,16 +1,16 @@
 
 library(tidyverse)
 library(terra)
-library(dismo)  # Para la función kfold
-library(pROC)   # Para calcular e
+library(dismo)  
+library(pROC)   
 library(tidyverse)
 library(terra)
-library(dismo)  # Para la función kfold
-library(pROC)   # Para calcular el AUC
-library(here)   # Para manejar rutas de archivos
-library(tmap)  # Para visualizar mapas
+library(dismo)  
+library(pROC)   
+library(here)   
+library(tmap)  
 
-rm(list = ls())  # Limpiar el entorno
+rm(list = ls()) 
 
 
 
@@ -56,23 +56,19 @@ datos_modelos <- read_csv(here("datos_modelos.csv"))[ , -c(10, 11)]
            
 
 
-# ==============================================================================
-#                      1. PREPARACIÓN DE LOS DATOS
-# ==============================================================================
+#PREPARAR DATOS
 
 # Convertir la columna de respuesta a factor para algunos modelos (buena práctica)
 datos_modelos$presencia_ausencia <- as.factor(datos_modelos$presencia_ausencia)
 
-# ==============================================================================
-#                      2. VALIDACIÓN CRUZADA DE K-FOLDS
-# ==============================================================================
+# VALIDACIÓN CRUZADA
 
 # Definir el número de 'folds'
 
 k_folds <- 5
 
 # Crear los grupos de validación en la tabla 'datos_modelos'
-# kfold asigna aleatoriamente un grupo (1 a 5) a cada registro
+
 datos_modelos$k_fold_group <- kfold(datos_modelos, k_folds)
 
 # Lista para almacenar los resultados del AUC de cada fold
@@ -117,14 +113,15 @@ cat("\n")
 cat("AUC Promedio de los 5 Folds:", round(auc_promedio, 3), "\n")
 cat("Desviación Estándar del AUC:", round(auc_desviacion, 3), "\n")
 
-# ==============================================================================
-#                      3. AJUSTAR EL MODELO FINAL Y PREDECIR UN MAPA
-# ==============================================================================
-
+# AJUSTE FINAL DEL MODELO
 # Asume que 'variables_completas' ya está en el entorno.
 
 # Entrenar el modelo con el 100% de los datos para la predicción final
-m_glm_final <- glm(presencia_ausencia ~ ., data = datos_modelos %>% dplyr::select(-k_fold_group), family = binomial)
+m_glm_final <- glm(presencia_ausencia ~ ., 
+                   data = datos_modelos %>% 
+                     dplyr::select(-k_fold_group), 
+                   family = binomial)
+
 summary(m_glm_final)
 
 
@@ -163,7 +160,6 @@ ausencias <- datos_modelos$presencia_ausencia == 0
 # Obtener las predicciones para el modelo final en todos tus datos
 predicciones_finales <- predict(SDM_glm, datos_modelos, type = "response")
 
-# ==============================================================================
 
 
 # --- EVALUACIÓN DETALLADA DEL MODELO FINAL ---

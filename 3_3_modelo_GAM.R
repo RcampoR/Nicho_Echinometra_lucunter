@@ -1,16 +1,16 @@
 
-library(here)      # Para manejar rutas de archivos
-library(terra)     # Para trabajar con datos raster
-library(predicts)  # Para la evaluación y partición de datos
-library(tidyverse) # Para manipulación de datos
-library(mgcv)      # El paquete principal para GAM
+library(here)      
+library(terra)     
+library(predicts)  
+library(tidyverse) 
+library(mgcv)      
 library(tmap)
 
 # Limpiar el entorno de trabajo
 rm(list = ls())
 
-# --- 2. CARGA DE DATOS AMBIENTALES Y DE ESPECIES ---
 
+# --- 2. CARGA DE DATOS AMBIENTALES Y DE ESPECIES ---
 
 # Define la ruta base a la carpeta
 pack_variables_base <- here("..", "..", "BIO_MARS_limpias_caribe_50m")
