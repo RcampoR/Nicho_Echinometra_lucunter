@@ -9,7 +9,7 @@ library(rjava)
 
 rm(list = ls())
 
-# Data translation: 'evaluación' -> 'evaluation', 'Modelo' -> 'Model', 'Umbral_TSS' -> 'TSS_Threshold'
+# TABLA METRICAS DE EVALUACIÓN
 evaluation <- tibble(Model = c("MAXENT", "GLM", "GAM", "RF", "ENSEMBLE"),
                      AUC = c(0.957, 0.9503, 0.969, 0.997, 0.98),
                      TSS = c(0.796, 0.7592593, 0.852, 0.963, 0.907),
@@ -19,44 +19,31 @@ evaluation <- tibble(Model = c("MAXENT", "GLM", "GAM", "RF", "ENSEMBLE"),
 evaluation$Model <- factor(evaluation$Model,
                            levels = c("MAXENT","GLM", "GAM", "RF", "ENSEMBLE"))
 
-# Data manipulation translation: 'evaluación_plot' -> 'evaluation_plot', 'Métrica' -> 'Metric', 'Valor' -> 'Value'
+
 evaluation_plot <- evaluation %>%
-  # Convert TSS to the AUC scale (0 to 1) for plotting
   mutate(TSS_equiv = (TSS + 1) / 2) %>%
   select(Model, AUC, TSS_equiv) %>%
   pivot_longer(cols = -Model, names_to = "Metric", values_to = "Value")
 
-# Plotting the results
+# GRAFICAR
 ggplot(evaluation_plot, aes(x = Model, y = Value, fill = Metric)) +
   geom_bar(stat = "identity", position = "dodge") +
-  
-  # Reference line for AUC
-  geom_hline(aes(yintercept = 0.9, linetype = "min. AUC"),
+    geom_hline(aes(yintercept = 0.9, linetype = "min. AUC"),
              color = "gray12", linewidth = 0.8) +
-  
-  # Reference line for TSS (converted)
-  geom_hline(aes(yintercept = (0.7 + 1)/2, linetype = "min. TSS"),
+    geom_hline(aes(yintercept = (0.7 + 1)/2, linetype = "min. TSS"),
              color = "red1", linewidth = 0.8) +
-  
-  # Labels translation
-  labs(
+    labs(
     x = "Model",
     y = "AUC Value",
     fill = "Metric"
   ) +
-  
-  # Scale fill translation (labels)
-  scale_fill_manual(values = c("AUC" = "#2E86AB",
+    scale_fill_manual(values = c("AUC" = "#2E86AB",
                                "TSS_equiv" = "#A23B72"),
                     labels = c("AUC", "TSS")) +
-  
-  # Linetype legend translation
-  scale_linetype_manual(values = c("min. TSS" = "dashed",
+    scale_linetype_manual(values = c("min. TSS" = "dashed",
                                    "min. AUC" = "dashed")) +
-  
-  # Correct secondary axis for TSS translation
-  scale_y_continuous(
-    sec.axis = sec_axis(~ . * 2 - 1, name = "TSS Value") # The inverse transformation: (Y * 2) - 1
+    scale_y_continuous(
+    sec.axis = sec_axis(~ . * 2 - 1, name = "TSS Value") 
   ) +
   
   theme_classic() +
@@ -261,9 +248,8 @@ ensamble_importancia <- importancia_normalizada %>%
   arrange(desc(ENSAMBLE))
 
 
-# ----------------------------------------------------------------------
 # Cambios en la traducción de las etiquetas para el gráfico (al inglés)
-# ----------------------------------------------------------------------
+
 nombres_variables <- c(
   "distancia_costa" = "Distance to Coast",
   "ph_rango" = "pH Range",
