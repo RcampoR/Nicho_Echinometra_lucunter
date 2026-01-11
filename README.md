@@ -62,6 +62,6 @@ Bajo los siguientes términos:
 
 Si utilizas estos datos o scripts en tu investigación, por favor cita de la siguiente manera:
 
-    Campo, R. D. & Diaz, A. F. (2026). Proyecciones de la idoneidad de hábitat de Echinometra lucunter en el Caribe, bajo escenarios de cambio climático. Universidad de Córdoba, Colombia.
+Campo Romero, R. D., & Diaz Delgadillo, A. F. (2026). Dataset and R-code for: Habitat Suitability Projections of Echinometra lucunter in the Caribbean under Climate Change Scenarios (v.0.2). Zenodo. https://doi.org/10.5281/zenodo.18210568
 
 Contacto: Para dudas sobre la implementación del modelo o acceso a las capas raster procesadas, contactar a los autores.
